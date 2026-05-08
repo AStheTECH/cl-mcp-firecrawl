@@ -17,9 +17,12 @@ logger = logging.getLogger("firecrawl-mcp-server")
 
 def get_headers() -> Dict[str, str]:
     cred = get_credentials()
-    token = cred.access_token or cred.api_key
+    token = cred.fields["api_key"]
     if not token:
-        raise ValueError("No credential available — ensure X-MCP-Cred-Api-Key or X-MCP-Cred-Access-Token header is set")
+        raise ValueError(
+            "No credential available — ensure X-MCP-Cred-Fields  header is set"
+        )
+    print("api-key:", token)
     return {
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json",
