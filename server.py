@@ -18,13 +18,12 @@ configure_logging()
 logger = logging.getLogger("firecrawl-mcp-server")
 
 backend = HeaderCredentialBackend()
-mcp = FastMCP(
-    "CL Firecrawl MCP Server", middleware=[CredentialMiddleware(backend, "static")]
+mcp = FastMCP("MewCP Firecrawl MCP Server", middleware=[CredentialMiddleware(backend, "static")]
 )
 register_tools(mcp)
 
 # Expose ASGI app for hosting platform's (e.g. Vercel) Python runtime.
-app = mcp.http_app(path="/mcp", transport="streamable-http")
+app = mcp.http_app(path="/mcp", transport="streamable-http", stateless_http=True)
 
 if __name__ == "__main__":
     logger.info("=" * 60)
