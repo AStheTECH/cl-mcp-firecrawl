@@ -22,7 +22,7 @@ def get_headers() -> Dict[str, str]:
         raise ValueError(
             "No credential available — ensure X-MCP-Cred-Fields  header is set"
         )
-    print("api-key:", token)
+
     return {
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json",
