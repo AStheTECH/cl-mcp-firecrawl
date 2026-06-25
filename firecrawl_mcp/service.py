@@ -1,108 +1,110 @@
-"""Service layer for Firecrawl API requests.
-
-This module handles all communication with the Firecrawl API,
-keeping authentication and request logic separate from tool definitions.
-"""
+"""Upstream API client for MewCP Firecrawl MCP Server."""
 
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
 import requests
 from fastmcp_credentials import get_credentials
 
-from .config import FIRECRAWL_API_BASE, FIRECRAWL_API_VERSION, API_TIMEOUT
+from .config import FIRECRAWL_API_BASE, CONNECT_TIMEOUT, READ_TIMEOUT, POLL_TIMEOUT
 
-logger = logging.getLogger("firecrawl-mcp-server")
+logger = logging.getLogger("firecrawl-mcp.service")
 
 
-def get_headers() -> Dict[str, str]:
+def _get_api_key() -> str:
     cred = get_credentials()
-    token = cred.fields["api_key"]
-    if not token:
+    key = cred.fields.get("api_key") if cred.fields else None
+    if not key:
         raise ValueError(
-            "No credential available — ensure X-MCP-Cred-Fields  header is set"
+            'Missing api_key credential ensure X-MCP-Cred-Fields header contains {"api_key": "fc-..."}'
         )
+    return key
 
+
+def _auth_headers() -> dict[str, str]:
     return {
-        "Authorization": f"Bearer {token}",
+        "Authorization": f"Bearer {_get_api_key()}",
         "Content-Type": "application/json",
     }
 
 
-def make_firecrawl_request(
+def map_retriable(
+    status: int, retry_after_header: str | None = None
+) -> tuple[bool, int | None]:
+    """Returns (retriable, retry_after_seconds) from HTTP status."""
+    retry_after: int | None = None
+    if retry_after_header:
+        try:
+            retry_after = int(retry_after_header)
+        except ValueError:
+            pass
+
+    if status in (500, 502, 503):
+        return True, None
+    if status == 429:
+        return True, retry_after
+    return False, None
+
+
+def firecrawl_request(
     method: str,
     endpoint: str,
-    body: Optional[Dict[str, Any]] = None,
-    params: Optional[Dict[str, Any]] = None,
-) -> Dict[str, Any]:
-    """Generic request handler for Firecrawl API.
+    body: dict[str, Any] | None = None,
+    params: dict[str, Any] | None = None,
+    timeout: tuple[int, int] | None = None,
+) -> tuple[dict[str, Any], int, int | None]:
+    """Make a Firecrawl API request.
 
-    Args:
-        method: HTTP method (GET, POST, etc.)
-        endpoint: API endpoint path (e.g., '/scrape')
-        body: Optional request body
-        params: Optional query parameters
-
-    Returns:
-        Response data or error dict
+    Returns (response_dict, status_code, retry_after_seconds).
     """
-    headers = get_headers()
-    url = f"{FIRECRAWL_API_BASE}/{FIRECRAWL_API_VERSION}{endpoint}"
-
+    if timeout is None:
+        timeout = (CONNECT_TIMEOUT, READ_TIMEOUT)
+    url = f"{FIRECRAWL_API_BASE}{endpoint}"
+    resp = requests.request(
+        method=method,
+        url=url,
+        headers=_auth_headers(),
+        json=body,
+        params=params,
+        timeout=timeout,
+    )
     try:
-        response = requests.request(
-            method=method,
-            url=url,
-            headers=headers,
-            json=body,
-            params=params,
-            timeout=API_TIMEOUT,
-        )
-        result = response.json()
+        data = resp.json()
+    except Exception:
+        data = {"success": False, "error": resp.text or "Empty response body"}
 
-        # Successful response (2xx status)
-        if 200 <= response.status_code < 300:
-            return result
+    retry_after_hdr = resp.headers.get("Retry-After")
+    retriable, retry_after = map_retriable(resp.status_code, retry_after_hdr)
+    return data, resp.status_code, retry_after
 
-        # Error response
-        logger.error(f"Firecrawl API error ({response.status_code}): {result}")
-        return {
-            "success": False,
-            "error": result.get("error", "Unknown error"),
-            "statusCode": response.status_code,
-            "message": result.get("message", "Firecrawl API request failed"),
-            "details": result,
-        }
 
-    except requests.exceptions.Timeout:
-        error_msg = f"Firecrawl API request timed out after {API_TIMEOUT}s"
-        logger.error(error_msg)
-        return {
-            "success": False,
-            "error": error_msg,
-            "statusCode": 408,
-            "message": "Request timeout",
-            "details": {},
-        }
+def firecrawl_multipart(
+    endpoint: str,
+    file_bytes: bytes,
+    file_name: str,
+    options_json: str,
+    timeout: tuple[int, int] | None = None,
+) -> tuple[dict[str, Any], int, int | None]:
+    """POST multipart/form-data for /parse endpoint.
 
-    except requests.exceptions.RequestException as e:
-        error_msg = f"Firecrawl API request failed: {str(e)}"
-        logger.error(error_msg)
-        return {
-            "success": False,
-            "error": error_msg,
-            "statusCode": 0,
-            "message": "Network error",
-            "details": {},
-        }
+    Returns (response_dict, status_code, retry_after_seconds).
+    """
+    if timeout is None:
+        timeout = (CONNECT_TIMEOUT, READ_TIMEOUT)
+    url = f"{FIRECRAWL_API_BASE}{endpoint}"
+    key = _get_api_key()
+    resp = requests.post(
+        url,
+        headers={"Authorization": f"Bearer {key}"},
+        data={"options": options_json},
+        files={"file": (file_name, file_bytes)},
+        timeout=timeout,
+    )
+    try:
+        data = resp.json()
+    except Exception:
+        data = {"success": False, "error": resp.text or "Empty response body"}
 
-    except Exception as e:
-        error_msg = f"Unexpected error in Firecrawl request: {str(e)}"
-        logger.error(error_msg)
-        return {
-            "success": False,
-            "error": error_msg,
-            "statusCode": 500,
-            "message": "Server error",
-            "details": {},
-        }
+    retry_after_hdr = resp.headers.get("Retry-After")
+    _, retry_after = map_retriable(resp.status_code, retry_after_hdr)
+    return data, resp.status_code, retry_after

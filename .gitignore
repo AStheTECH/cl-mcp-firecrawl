@@ -13,6 +13,7 @@ env/
 .github
 github
 __pycache__/
-/DELIVERY_SUMMARY.md
+/firecrawl_api_docs
 /pyproject.toml
 /.python-version
+

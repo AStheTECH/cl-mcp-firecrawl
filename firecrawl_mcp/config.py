@@ -1,19 +1,33 @@
-"""Configuration and logging setup for Firecrawl MCP Server."""
+"""Configuration for MewCP Firecrawl MCP Server."""
 
 import logging
+import os
 
-# Firecrawl API configuration
-FIRECRAWL_API_BASE = "https://api.firecrawl.dev"
-FIRECRAWL_API_VERSION = "v2"
+SERVER_VERSION = "v1.1.0"
+BREAKING_CHANGES: list = []
 
-# Default API timeout (seconds)
-API_TIMEOUT = 30
+FIRECRAWL_API_BASE = "https://api.firecrawl.dev/v2"
+
+CONNECT_TIMEOUT = 5  # fail fast if TCP cannot be established
+READ_TIMEOUT = 60  # sync ops: scrape, map, search, parse, browser interact
+POLL_TIMEOUT = 30  # async job starts and status polls
 
 
 def configure_logging() -> None:
-    """Configure logging for the Firecrawl MCP Server."""
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-        handlers=[logging.StreamHandler()],
-    )
+    log_level = os.environ.get("LOG_LEVEL", "INFO").upper()
+    try:
+        from pythonjsonlogger import jsonlogger
+
+        handler = logging.StreamHandler()
+        handler.setFormatter(
+            jsonlogger.JsonFormatter(
+                fmt="%(asctime)s %(name)s %(levelname)s %(message)s"
+            )
+        )
+    except ImportError:
+        handler = logging.StreamHandler()
+
+    root = logging.getLogger()
+    root.handlers.clear()
+    root.addHandler(handler)
+    root.setLevel(log_level)
