@@ -43,16 +43,50 @@ Scrapes a single URL and returns content in one or more formats. Supports JavaSc
 ```
 
 **Output:**
+
 ```json
+// Success
 {
   "success": true,
   "statusCode": 200,
+  "retriable": false,
+  "retry_after_seconds": null,
+  "error": null,
   "data": {
     "markdown": "# Page Title\n...",
-    "metadata": { "title": "...", "url": "...", "scrapeId": "..." }
+    "summary": null,
+    "html": null,
+    "rawHtml": null,
+    "screenshot": null,
+    "links": null,
+    "metadata": {
+      "title": "Page Title",
+      "description": "Page description",
+      "language": "en",
+      "sourceURL": "https://example.com",
+      "url": "https://example.com",
+      "keywords": null,
+      "statusCode": 200,
+      "contentType": "text/html",
+      "error": null,
+      "scrapeId": "abc123"
+    },
+    "warning": null
   }
 }
+
+// Error
+{
+  "success": false,
+  "statusCode": 400,
+  "retriable": false,
+  "retry_after_seconds": null,
+  "error": { "code": "VALIDATION_ERROR", "message": "url cannot be empty", "details": {} },
+  "data": null
+}
 ```
+
+> Rate-limited errors return `"retriable": true` and `"retry_after_seconds": 60`.
 
 </details>
 
@@ -75,13 +109,34 @@ Starts an async job to scrape multiple URLs in parallel. Returns a job ID — po
 ```
 
 **Output:**
+
 ```json
+// Success
 {
   "success": true,
   "statusCode": 200,
-  "data": { "id": "batch-job-uuid", "invalidURLs": [] }
+  "retriable": false,
+  "retry_after_seconds": null,
+  "error": null,
+  "data": {
+    "id": "batch-job-uuid",
+    "url": null,
+    "invalidURLs": []
+  }
+}
+
+// Error
+{
+  "success": false,
+  "statusCode": 400,
+  "retriable": false,
+  "retry_after_seconds": null,
+  "error": { "code": "VALIDATION_ERROR", "message": "urls cannot be empty", "details": {} },
+  "data": null
 }
 ```
+
+> Rate-limited errors return `"retriable": true` and `"retry_after_seconds": 60`.
 
 </details>
 
@@ -97,18 +152,49 @@ Returns the current status and completed results of a batch scrape job.
 ```
 
 **Output:**
+
 ```json
+// Success
 {
   "success": true,
   "statusCode": 200,
+  "retriable": false,
+  "retry_after_seconds": null,
+  "error": null,
   "data": {
     "status": "completed",
     "total": 5,
     "completed": 5,
-    "data": [{ "markdown": "..." }]
+    "creditsUsed": 5,
+    "expiresAt": "2024-12-15T00:00:00Z",
+    "next": null,
+    "data": [
+      {
+        "markdown": "# Page Title\n...",
+        "summary": null,
+        "html": null,
+        "rawHtml": null,
+        "screenshot": null,
+        "links": null,
+        "metadata": { "title": "...", "url": "...", "statusCode": 200 },
+        "warning": null
+      }
+    ]
   }
 }
+
+// Error
+{
+  "success": false,
+  "statusCode": 404,
+  "retriable": false,
+  "retry_after_seconds": null,
+  "error": { "code": "NOT_FOUND", "message": "job not found", "details": {} },
+  "data": null
+}
 ```
+
+> `status` values: `scraping`, `completed`, `failed`, `cancelled`
 
 </details>
 
@@ -124,11 +210,26 @@ DESTRUCTIVE — cancels a running batch scrape job. Completed pages are not retu
 ```
 
 **Output:**
+
 ```json
+// Success
 {
   "success": true,
   "statusCode": 200,
+  "retriable": false,
+  "retry_after_seconds": null,
+  "error": null,
   "data": { "status": "cancelled" }
+}
+
+// Error
+{
+  "success": false,
+  "statusCode": 404,
+  "retriable": false,
+  "retry_after_seconds": null,
+  "error": { "code": "NOT_FOUND", "message": "job not found", "details": {} },
+  "data": null
 }
 ```
 
@@ -160,13 +261,33 @@ Starts an async crawl from a seed URL, following links and scraping discovered p
 ```
 
 **Output:**
+
 ```json
+// Success
 {
   "success": true,
   "statusCode": 200,
-  "data": { "id": "crawl-job-uuid", "url": "https://api.firecrawl.dev/v2/crawl/crawl-job-uuid" }
+  "retriable": false,
+  "retry_after_seconds": null,
+  "error": null,
+  "data": {
+    "id": "crawl-job-uuid",
+    "url": "https://api.firecrawl.dev/v2/crawl/crawl-job-uuid"
+  }
+}
+
+// Error
+{
+  "success": false,
+  "statusCode": 400,
+  "retriable": false,
+  "retry_after_seconds": null,
+  "error": { "code": "VALIDATION_ERROR", "message": "url cannot be empty", "details": {} },
+  "data": null
 }
 ```
+
+> Rate-limited errors return `"retriable": true` and `"retry_after_seconds": 60`.
 
 </details>
 
@@ -182,19 +303,52 @@ Returns the current status, progress, and completed page data for a crawl job.
 ```
 
 **Output:**
+
 ```json
+// Success
 {
   "success": true,
   "statusCode": 200,
+  "retriable": false,
+  "retry_after_seconds": null,
+  "error": null,
   "data": {
     "status": "completed",
     "total": 42,
     "completed": 42,
     "creditsUsed": 42,
-    "data": [{ "markdown": "..." }]
+    "expiresAt": "2024-12-15T00:00:00Z",
+    "createdAt": "2024-12-14T00:00:00Z",
+    "completedAt": "2024-12-14T01:00:00Z",
+    "duration": 3600,
+    "next": null,
+    "data": [
+      {
+        "markdown": "# Page Title\n...",
+        "summary": null,
+        "html": null,
+        "rawHtml": null,
+        "screenshot": null,
+        "links": null,
+        "metadata": { "title": "...", "url": "...", "statusCode": 200 },
+        "warning": null
+      }
+    ]
   }
 }
+
+// Error
+{
+  "success": false,
+  "statusCode": 404,
+  "retriable": false,
+  "retry_after_seconds": null,
+  "error": { "code": "NOT_FOUND", "message": "job not found", "details": {} },
+  "data": null
+}
 ```
+
+> `status` values: `crawling`, `completed`, `failed`, `cancelled`
 
 </details>
 
@@ -210,11 +364,26 @@ DESTRUCTIVE — cancels a running crawl job. Already-scraped pages are not retur
 ```
 
 **Output:**
+
 ```json
+// Success
 {
   "success": true,
   "statusCode": 200,
+  "retriable": false,
+  "retry_after_seconds": null,
+  "error": null,
   "data": { "status": "cancelled" }
+}
+
+// Error
+{
+  "success": false,
+  "statusCode": 404,
+  "retriable": false,
+  "retry_after_seconds": null,
+  "error": { "code": "NOT_FOUND", "message": "job not found", "details": {} },
+  "data": null
 }
 ```
 
@@ -241,16 +410,31 @@ Discovers and lists all URLs found on a website without scraping page content. U
 ```
 
 **Output:**
+
 ```json
+// Success
 {
   "success": true,
   "statusCode": 200,
+  "retriable": false,
+  "retry_after_seconds": null,
+  "error": null,
   "data": {
     "links": [
-      { "url": "https://example.com/", "title": "Home" },
-      { "url": "https://example.com/about" }
+      { "url": "https://example.com/", "title": "Home", "description": null },
+      { "url": "https://example.com/about", "title": null, "description": null }
     ]
   }
+}
+
+// Error
+{
+  "success": false,
+  "statusCode": 400,
+  "retriable": false,
+  "retry_after_seconds": null,
+  "error": { "code": "VALIDATION_ERROR", "message": "url cannot be empty", "details": {} },
+  "data": null
 }
 ```
 
@@ -278,20 +462,68 @@ Searches the web and optionally scrapes the full content of result pages. Suppor
 ```
 
 **Output:**
+
 ```json
+// Success
 {
   "success": true,
   "statusCode": 200,
+  "retriable": false,
+  "retry_after_seconds": null,
+  "error": null,
   "data": {
     "results": {
-      "web": [{ "url": "https://...", "title": "...", "description": "..." }],
-      "news": [],
-      "images": []
+      "web": [
+        {
+          "title": "Example Result",
+          "description": "Page description...",
+          "url": "https://example.com",
+          "markdown": null,
+          "html": null,
+          "rawHtml": null,
+          "category": null
+        }
+      ],
+      "images": [
+        {
+          "title": "Image Title",
+          "imageUrl": "https://example.com/image.jpg",
+          "imageWidth": 1200,
+          "imageHeight": 630,
+          "url": "https://example.com",
+          "position": 1
+        }
+      ],
+      "news": [
+        {
+          "title": "News Headline",
+          "snippet": "News excerpt...",
+          "url": "https://news.example.com",
+          "date": "2024-12-14",
+          "imageUrl": null,
+          "position": 1,
+          "markdown": null
+        }
+      ]
     },
+    "warning": null,
+    "id": null,
     "creditsUsed": 5
   }
 }
+
+// Error
+{
+  "success": false,
+  "statusCode": 400,
+  "retriable": false,
+  "retry_after_seconds": null,
+  "error": { "code": "VALIDATION_ERROR", "message": "query cannot be empty", "details": {} },
+  "data": null
+}
 ```
+
+> Rate-limited errors return `"retriable": true` and `"retry_after_seconds": 60`.
 
 </details>
 
@@ -312,14 +544,45 @@ Parses a document (PDF, DOCX, etc.) provided as base64-encoded bytes and returns
 ```
 
 **Output:**
+
 ```json
+// Success
 {
   "success": true,
   "statusCode": 200,
+  "retriable": false,
+  "retry_after_seconds": null,
+  "error": null,
   "data": {
-    "markdown": "# Report Title\n...",
-    "links": ["https://reference.com"]
+    "markdown": "# Document Title\n...",
+    "summary": null,
+    "html": null,
+    "rawHtml": null,
+    "links": ["https://reference.com"],
+    "metadata": {
+      "title": "Document Title",
+      "description": null,
+      "language": null,
+      "sourceURL": null,
+      "url": null,
+      "keywords": null,
+      "statusCode": null,
+      "contentType": "application/pdf",
+      "error": null,
+      "scrapeId": null
+    },
+    "warning": null
   }
+}
+
+// Error
+{
+  "success": false,
+  "statusCode": 400,
+  "retriable": false,
+  "retry_after_seconds": null,
+  "error": { "code": "VALIDATION_ERROR", "message": "file_content_b64 cannot be empty", "details": {} },
+  "data": null
 }
 ```
 
@@ -343,13 +606,36 @@ Starts an async agent that navigates websites and extracts data based on a natur
 ```
 
 **Output:**
+
 ```json
+// Success — job started
 {
   "success": true,
   "statusCode": 200,
-  "data": { "id": "agent-job-uuid", "status": "processing" }
+  "retriable": false,
+  "retry_after_seconds": null,
+  "error": null,
+  "data": {
+    "id": "agent-job-uuid",
+    "status": "processing",
+    "data": null,
+    "expiresAt": null,
+    "creditsUsed": null
+  }
+}
+
+// Error
+{
+  "success": false,
+  "statusCode": 400,
+  "retriable": false,
+  "retry_after_seconds": null,
+  "error": { "code": "VALIDATION_ERROR", "message": "prompt cannot be empty", "details": {} },
+  "data": null
 }
 ```
+
+> Rate-limited errors return `"retriable": true` and `"retry_after_seconds": 60`.
 
 </details>
 
@@ -365,17 +651,36 @@ Returns the current status and results of an agent job. Poll every 15–30 secon
 ```
 
 **Output:**
+
 ```json
+// Success — job completed
 {
   "success": true,
   "statusCode": 200,
+  "retriable": false,
+  "retry_after_seconds": null,
+  "error": null,
   "data": {
+    "id": "agent-job-uuid",
     "status": "completed",
-    "data": { "extracted_field": "value" },
+    "data": { "your_field": "extracted value" },
+    "expiresAt": "2024-12-15T00:00:00Z",
     "creditsUsed": 120
   }
 }
+
+// Error
+{
+  "success": false,
+  "statusCode": 404,
+  "retriable": false,
+  "retry_after_seconds": null,
+  "error": { "code": "NOT_FOUND", "message": "job not found", "details": {} },
+  "data": null
+}
 ```
+
+> `status` values: `processing`, `completed`, `failed`, `cancelled`. `data.data` shape matches the schema passed to `run_agent`.
 
 </details>
 
@@ -391,11 +696,26 @@ DESTRUCTIVE — cancels a running agent job. Partial results are not returned af
 ```
 
 **Output:**
+
 ```json
+// Success
 {
   "success": true,
   "statusCode": 200,
+  "retriable": false,
+  "retry_after_seconds": null,
+  "error": null,
   "data": { "status": "cancelled" }
+}
+
+// Error
+{
+  "success": false,
+  "statusCode": 404,
+  "retriable": false,
+  "retry_after_seconds": null,
+  "error": { "code": "NOT_FOUND", "message": "job not found", "details": {} },
+  "data": null
 }
 ```
 
@@ -407,7 +727,7 @@ DESTRUCTIVE — cancels a running agent job. Partial results are not returned af
 <details>
 <summary><code>browser_interact</code> — Interact with a browser session</summary>
 
-Runs JavaScript code or a natural language prompt against an active browser session opened by a previous `scrape_url` call. Use `data.metadata.scrapeId` from the scrape response as the `scrape_id`. Provide either `code` or `prompt_text`, not both.
+Runs JavaScript code or a natural language prompt against an active browser session opened by a previous `scrape_url` call. Use `data.metadata.scrapeId` from the scrape response as `scrape_id`. Provide either `code` or `prompt_text`, not both.
 
 **Inputs:**
 ```
@@ -419,15 +739,56 @@ Runs JavaScript code or a natural language prompt against an active browser sess
 ```
 
 **Output:**
+
 ```json
+// Success — code execution
 {
   "success": true,
   "statusCode": 200,
+  "retriable": false,
+  "retry_after_seconds": null,
+  "error": null,
   "data": {
-    "exitCode": 0,
+    "cdpUrl": "wss://browser.firecrawl.dev/...",
+    "liveViewUrl": null,
+    "interactiveLiveViewUrl": null,
+    "output": null,
+    "stdout": "",
     "result": "{\"title\": \"Example\"}",
-    "cdpUrl": "wss://browser.firecrawl.dev/..."
+    "stderr": null,
+    "exitCode": 0,
+    "killed": false
   }
+}
+
+// Success — prompt execution
+{
+  "success": true,
+  "statusCode": 200,
+  "retriable": false,
+  "retry_after_seconds": null,
+  "error": null,
+  "data": {
+    "cdpUrl": "wss://browser.firecrawl.dev/...",
+    "liveViewUrl": null,
+    "interactiveLiveViewUrl": null,
+    "output": "Clicked the submit button successfully.",
+    "stdout": null,
+    "result": null,
+    "stderr": null,
+    "exitCode": null,
+    "killed": null
+  }
+}
+
+// Error
+{
+  "success": false,
+  "statusCode": 400,
+  "retriable": false,
+  "retry_after_seconds": null,
+  "error": { "code": "VALIDATION_ERROR", "message": "scrape_id cannot be empty", "details": {} },
+  "data": null
 }
 ```
 
@@ -445,11 +806,26 @@ DESTRUCTIVE — closes and releases a browser session. Call this when browser in
 ```
 
 **Output:**
+
 ```json
+// Success
 {
   "success": true,
   "statusCode": 200,
+  "retriable": false,
+  "retry_after_seconds": null,
+  "error": null,
   "data": { "status": "closed" }
+}
+
+// Error
+{
+  "success": false,
+  "statusCode": 404,
+  "retriable": false,
+  "retry_after_seconds": null,
+  "error": { "code": "NOT_FOUND", "message": "scrape session not found", "details": {} },
+  "data": null
 }
 ```
 
@@ -474,15 +850,37 @@ Searches Firecrawl's academic research index by topic, method, benchmark, or aut
 ```
 
 **Output:**
+
 ```json
+// Success
 {
   "success": true,
   "statusCode": 200,
+  "retriable": false,
+  "retry_after_seconds": null,
+  "error": null,
   "data": {
     "results": [
-      { "paperId": "123", "primaryId": "arxiv:2105.05233", "title": "...", "abstract": "...", "score": 0.016 }
+      {
+        "paperId": "2014215642691656232",
+        "primaryId": "arxiv:2105.05233",
+        "ids": { "arxiv": ["2105.05233"] },
+        "title": "Diffusion Models Beat GANs on Image Synthesis",
+        "abstract": "We show that diffusion models can achieve...",
+        "score": 0.016
+      }
     ]
   }
+}
+
+// Error
+{
+  "success": false,
+  "statusCode": 400,
+  "retriable": false,
+  "retry_after_seconds": null,
+  "error": { "code": "VALIDATION_ERROR", "message": "query cannot be empty", "details": {} },
+  "data": null
 }
 ```
 
@@ -501,19 +899,38 @@ Retrieves title, abstract, authors, categories, and dates for a specific paper b
 ```
 
 **Output:**
+
 ```json
+// Success
 {
   "success": true,
   "statusCode": 200,
+  "retriable": false,
+  "retry_after_seconds": null,
+  "error": null,
   "data": {
     "paper": {
-      "paperId": "123",
-      "title": "...",
+      "paperId": "2014215642691656232",
+      "primaryId": "arxiv:2105.05233",
+      "ids": { "arxiv": ["2105.05233"] },
+      "title": "Diffusion Models Beat GANs on Image Synthesis",
+      "abstract": "We show that diffusion models can achieve...",
       "authors": "Dhariwal, Nichol",
-      "categories": ["cs.LG"],
-      "createdDate": "Wed, 11 May 2021 18:01:01 GMT"
+      "categories": ["cs.LG", "cs.CV"],
+      "createdDate": "Wed, 11 May 2021 18:01:01 GMT",
+      "updateDate": "Wed, 11 May 2021 18:01:01 GMT"
     }
   }
+}
+
+// Error
+{
+  "success": false,
+  "statusCode": 404,
+  "retriable": false,
+  "retry_after_seconds": null,
+  "error": { "code": "NOT_FOUND", "message": "paper not found", "details": {} },
+  "data": null
 }
 ```
 
@@ -535,15 +952,38 @@ Finds papers related to a seed paper ranked by semantic relevance to an intent. 
 ```
 
 **Output:**
+
 ```json
+// Success
 {
   "success": true,
   "statusCode": 200,
+  "retriable": false,
+  "retry_after_seconds": null,
+  "error": null,
   "data": {
-    "results": [{ "paperId": "456", "title": "DDPM", "score": 0.032 }],
+    "results": [
+      {
+        "paperId": "2006114239201234567",
+        "primaryId": "arxiv:2006.11239",
+        "title": "Denoising Diffusion Probabilistic Models",
+        "abstract": "We present high quality image synthesis...",
+        "score": 0.032
+      }
+    ],
     "poolSize": 40,
     "truncated": false
   }
+}
+
+// Error
+{
+  "success": false,
+  "statusCode": 404,
+  "retriable": false,
+  "retry_after_seconds": null,
+  "error": { "code": "NOT_FOUND", "message": "paper not found", "details": {} },
+  "data": null
 }
 ```
 
@@ -562,24 +1002,43 @@ Searches GitHub issue history, pull requests, discussions, and repository README
 ```
 
 **Output:**
+
 ```json
+// Success
 {
   "success": true,
   "statusCode": 200,
+  "retriable": false,
+  "retry_after_seconds": null,
+  "error": null,
   "data": {
     "results": [
       {
         "resultType": "issue",
-        "repo": "firecrawl/firecrawl",
-        "url": "https://github.com/...",
+        "repo": "mendableai/firecrawl",
+        "url": "https://github.com/mendableai/firecrawl/issues/123",
+        "pageType": null,
         "number": 123,
         "title": "Worker shutdown race condition",
-        "snippet": "Queue worker shutdown can lose..."
+        "snippet": "Queue worker shutdown can lose in-flight jobs...",
+        "contentMd": null
       }
     ]
   }
 }
+
+// Error
+{
+  "success": false,
+  "statusCode": 400,
+  "retriable": false,
+  "retry_after_seconds": null,
+  "error": { "code": "VALIDATION_ERROR", "message": "query cannot be empty", "details": {} },
+  "data": null
+}
 ```
+
+> `resultType` values: `issue`, `pull_request`, `repository`, `discussion`
 
 </details>
 
@@ -661,7 +1120,7 @@ Use `paperId` or `primaryId` from `search_papers` results.
 1. Go to [Firecrawl](https://www.firecrawl.dev) and sign in or create an account
 2. Navigate to **API Keys** in your dashboard
 3. Click **Create API Key**
-4. Copy the generated key  you will only see it once
+4. Copy the generated key — you will only see it once
 
 </details>
 
