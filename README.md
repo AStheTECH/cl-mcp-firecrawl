@@ -42,36 +42,29 @@ Scrapes a single URL and returns its content in the requested formats. Returns t
 - `remove_base64_images` (bool, optional, default: true) — Drop inline base64 images from markdown output to reduce token usage.
 ```
 
-**Output:**
+**Output `data` schema:**
 
-```json
+```typescript
 {
-  "success": true,
-  "statusCode": 200,
-  "retriable": false,
-  "retry_after_seconds": null,
-  "error": null,
-  "data": {
-    "markdown": "# Page Title\n...",
-    "summary": null,
-    "html": null,
-    "rawHtml": null,
-    "screenshot": null,
-    "links": null,
-    "metadata": {
-      "title": "Page Title",
-      "description": "Page description",
-      "language": "en",
-      "sourceURL": "https://example.com",
-      "url": "https://example.com",
-      "keywords": null,
-      "statusCode": 200,
-      "contentType": "text/html",
-      "error": null,
-      "scrapeId": "abc123"
-    },
-    "warning": null
-  }
+  markdown: string | null;
+  summary: string | null;
+  html: string | null;
+  rawHtml: string | null;
+  screenshot: string | null;
+  links: string[] | null;
+  metadata: {
+    title: string | null;
+    description: string | null;
+    language: string | null;
+    sourceURL: string | null;
+    url: string | null;
+    keywords: string | null;
+    statusCode: number | null;
+    contentType: string | null;
+    error: string | null;
+    scrapeId: string | null;
+  } | null;
+  warning: string | null;
 }
 ```
 
@@ -95,20 +88,13 @@ Starts an async batch scrape job for a list of URLs. Returns a job ID immediatel
 - `max_concurrency` (int, optional) — Maximum simultaneous scrapes (leave None for Firecrawl default).
 ```
 
-**Output:**
+**Output `data` schema:**
 
-```json
+```typescript
 {
-  "success": true,
-  "statusCode": 200,
-  "retriable": false,
-  "retry_after_seconds": null,
-  "error": null,
-  "data": {
-    "id": "batch-job-uuid",
-    "url": null,
-    "invalidURLs": []
-  }
+  id: string;
+  url: string | null;
+  invalidURLs: string[] | null;
 }
 ```
 
@@ -125,35 +111,37 @@ Polls the status of a batch scrape job started by `batch_scrape_urls`. Returns s
 - `job_id` (string, required) — Batch scrape job ID returned by `batch_scrape_urls`.
 ```
 
-**Output:**
+**Output `data` schema:**
 
-```json
+```typescript
 {
-  "success": true,
-  "statusCode": 200,
-  "retriable": false,
-  "retry_after_seconds": null,
-  "error": null,
-  "data": {
-    "status": "completed",
-    "total": 5,
-    "completed": 5,
-    "creditsUsed": 5,
-    "expiresAt": "2024-12-15T00:00:00Z",
-    "next": null,
-    "data": [
-      {
-        "markdown": "# Page Title\n...",
-        "summary": null,
-        "html": null,
-        "rawHtml": null,
-        "screenshot": null,
-        "links": null,
-        "metadata": { "title": "...", "url": "...", "statusCode": 200 },
-        "warning": null
-      }
-    ]
-  }
+  status: string;
+  total: number | null;
+  completed: number | null;
+  creditsUsed: number | null;
+  expiresAt: string | null;
+  next: string | null;
+  data: {
+    markdown: string | null;
+    summary: string | null;
+    html: string | null;
+    rawHtml: string | null;
+    screenshot: string | null;
+    links: string[] | null;
+    metadata: {
+      title: string | null;
+      description: string | null;
+      language: string | null;
+      sourceURL: string | null;
+      url: string | null;
+      keywords: string | null;
+      statusCode: number | null;
+      contentType: string | null;
+      error: string | null;
+      scrapeId: string | null;
+    } | null;
+    warning: string | null;
+  }[] | null;
 }
 ```
 
@@ -170,16 +158,11 @@ DESTRUCTIVE — REQUIRES EXPLICIT USER CONFIRMATION BEFORE CALLING. Stops a runn
 - `job_id` (string, required) — Batch scrape job ID to cancel.
 ```
 
-**Output:**
+**Output `data` schema:**
 
-```json
+```typescript
 {
-  "success": true,
-  "statusCode": 200,
-  "retriable": false,
-  "retry_after_seconds": null,
-  "error": null,
-  "data": { "status": "cancelled" }
+  status: string;
 }
 ```
 
@@ -210,19 +193,12 @@ Starts an async crawl job from a seed URL, following internal links up to the sp
 - `block_ads` (bool, optional, default: true) — Block ads and cookie banners.
 ```
 
-**Output:**
+**Output `data` schema:**
 
-```json
+```typescript
 {
-  "success": true,
-  "statusCode": 200,
-  "retriable": false,
-  "retry_after_seconds": null,
-  "error": null,
-  "data": {
-    "id": "crawl-job-uuid",
-    "url": "https://api.firecrawl.dev/v2/crawl/crawl-job-uuid"
-  }
+  id: string;
+  url: string | null;
 }
 ```
 
@@ -239,38 +215,40 @@ Polls the status of a crawl job started by `crawl_url`. Returns status (scraping
 - `job_id` (string, required) — Crawl job ID returned by `crawl_url`.
 ```
 
-**Output:**
+**Output `data` schema:**
 
-```json
+```typescript
 {
-  "success": true,
-  "statusCode": 200,
-  "retriable": false,
-  "retry_after_seconds": null,
-  "error": null,
-  "data": {
-    "status": "completed",
-    "total": 42,
-    "completed": 42,
-    "creditsUsed": 42,
-    "expiresAt": "2024-12-15T00:00:00Z",
-    "createdAt": "2024-12-14T00:00:00Z",
-    "completedAt": "2024-12-14T01:00:00Z",
-    "duration": 3600,
-    "next": null,
-    "data": [
-      {
-        "markdown": "# Page Title\n...",
-        "summary": null,
-        "html": null,
-        "rawHtml": null,
-        "screenshot": null,
-        "links": null,
-        "metadata": { "title": "...", "url": "...", "statusCode": 200 },
-        "warning": null
-      }
-    ]
-  }
+  status: string;
+  total: number | null;
+  completed: number | null;
+  creditsUsed: number | null;
+  expiresAt: string | null;
+  createdAt: string | null;
+  completedAt: string | null;
+  duration: number | null;
+  next: string | null;
+  data: {
+    markdown: string | null;
+    summary: string | null;
+    html: string | null;
+    rawHtml: string | null;
+    screenshot: string | null;
+    links: string[] | null;
+    metadata: {
+      title: string | null;
+      description: string | null;
+      language: string | null;
+      sourceURL: string | null;
+      url: string | null;
+      keywords: string | null;
+      statusCode: number | null;
+      contentType: string | null;
+      error: string | null;
+      scrapeId: string | null;
+    } | null;
+    warning: string | null;
+  }[] | null;
 }
 ```
 
@@ -287,16 +265,11 @@ DESTRUCTIVE — REQUIRES EXPLICIT USER CONFIRMATION BEFORE CALLING. Stops a runn
 - `job_id` (string, required) — Crawl job ID to cancel.
 ```
 
-**Output:**
+**Output `data` schema:**
 
-```json
+```typescript
 {
-  "success": true,
-  "statusCode": 200,
-  "retriable": false,
-  "retry_after_seconds": null,
-  "error": null,
-  "data": { "status": "cancelled" }
+  status: string;
 }
 ```
 
@@ -322,21 +295,15 @@ Discovers all URLs on a website without scraping their content. Returns a list o
 - `country` (string, optional) — ISO 3166-1 alpha-2 country code for geo-targeting (e.g. 'US', 'DE').
 ```
 
-**Output:**
+**Output `data` schema:**
 
-```json
+```typescript
 {
-  "success": true,
-  "statusCode": 200,
-  "retriable": false,
-  "retry_after_seconds": null,
-  "error": null,
-  "data": {
-    "links": [
-      { "url": "https://example.com/", "title": "Home", "description": null },
-      { "url": "https://example.com/about", "title": null, "description": null }
-    ]
-  }
+  links: {
+    url: string;
+    title: string | null;
+    description: string | null;
+  }[];
 }
 ```
 
@@ -363,54 +330,41 @@ Searches the web and optionally scrapes the full content of each result. Returns
 - `timeout_ms` (int, optional, default: 45000) — Request timeout in milliseconds (1000–300000). Default 45000.
 ```
 
-**Output:**
+**Output `data` schema:**
 
-```json
+```typescript
 {
-  "success": true,
-  "statusCode": 200,
-  "retriable": false,
-  "retry_after_seconds": null,
-  "error": null,
-  "data": {
-    "results": {
-      "web": [
-        {
-          "title": "Example Result",
-          "description": "Page description...",
-          "url": "https://example.com",
-          "markdown": null,
-          "html": null,
-          "rawHtml": null,
-          "category": null
-        }
-      ],
-      "images": [
-        {
-          "title": "Image Title",
-          "imageUrl": "https://example.com/image.jpg",
-          "imageWidth": 1200,
-          "imageHeight": 630,
-          "url": "https://example.com",
-          "position": 1
-        }
-      ],
-      "news": [
-        {
-          "title": "News Headline",
-          "snippet": "News excerpt...",
-          "url": "https://news.example.com",
-          "date": "2024-12-14",
-          "imageUrl": null,
-          "position": 1,
-          "markdown": null
-        }
-      ]
-    },
-    "warning": null,
-    "id": null,
-    "creditsUsed": 5
-  }
+  results: {
+    web: {
+      title: string | null;
+      description: string | null;
+      url: string | null;
+      markdown: string | null;
+      html: string | null;
+      rawHtml: string | null;
+      category: string | null;
+    }[] | null;
+    images: {
+      title: string | null;
+      imageUrl: string | null;
+      imageWidth: number | null;
+      imageHeight: number | null;
+      url: string | null;
+      position: number | null;
+    }[] | null;
+    news: {
+      title: string | null;
+      snippet: string | null;
+      url: string | null;
+      date: string | null;
+      imageUrl: string | null;
+      position: number | null;
+      markdown: string | null;
+    }[] | null;
+  } | null;
+  warning: string | null;
+  id: string | null;
+  creditsUsed: number | null;
 }
 ```
 
@@ -432,35 +386,28 @@ Parses a local or private document (PDF, DOCX, XLSX, HTML, and more) into clean 
 - `only_main_content` (bool, optional, default: true) — Strip headers, footers, and decorative content.
 ```
 
-**Output:**
+**Output `data` schema:**
 
-```json
+```typescript
 {
-  "success": true,
-  "statusCode": 200,
-  "retriable": false,
-  "retry_after_seconds": null,
-  "error": null,
-  "data": {
-    "markdown": "# Document Title\n...",
-    "summary": null,
-    "html": null,
-    "rawHtml": null,
-    "links": ["https://reference.com"],
-    "metadata": {
-      "title": "Document Title",
-      "description": null,
-      "language": null,
-      "sourceURL": null,
-      "url": null,
-      "keywords": null,
-      "statusCode": null,
-      "contentType": "application/pdf",
-      "error": null,
-      "scrapeId": null
-    },
-    "warning": null
-  }
+  markdown: string | null;
+  summary: string | null;
+  html: string | null;
+  rawHtml: string | null;
+  links: string[] | null;
+  metadata: {
+    title: string | null;
+    description: string | null;
+    language: string | null;
+    sourceURL: string | null;
+    url: string | null;
+    keywords: string | null;
+    statusCode: number | null;
+    contentType: string | null;
+    error: string | null;
+    scrapeId: string | null;
+  } | null;
+  warning: string | null;
 }
 ```
 
@@ -483,22 +430,15 @@ Starts an autonomous web research agent that searches, navigates, and extracts d
 - `max_credits` (int, optional) — Credit cap for this job (default 2500). Job fails without charges if exceeded.
 ```
 
-**Output:**
+**Output `data` schema:**
 
-```json
+```typescript
 {
-  "success": true,
-  "statusCode": 200,
-  "retriable": false,
-  "retry_after_seconds": null,
-  "error": null,
-  "data": {
-    "id": "agent-job-uuid",
-    "status": "processing",
-    "data": null,
-    "expiresAt": null,
-    "creditsUsed": null
-  }
+  id: string | null;
+  status: string | null;
+  data: object | null;
+  expiresAt: string | null;
+  creditsUsed: number | null;
 }
 ```
 
@@ -515,26 +455,17 @@ Polls the status of an agent job started by `run_agent`. Returns status (process
 - `job_id` (string, required) — Agent job ID returned by `run_agent`.
 ```
 
-**Output:**
+**Output `data` schema:**
 
-```json
+```typescript
 {
-  "success": true,
-  "statusCode": 200,
-  "retriable": false,
-  "retry_after_seconds": null,
-  "error": null,
-  "data": {
-    "id": "agent-job-uuid",
-    "status": "completed",
-    "data": { "your_field": "extracted value" },
-    "expiresAt": "2024-12-15T00:00:00Z",
-    "creditsUsed": 120
-  }
+  id: string | null;
+  status: string | null;
+  data: object | null;   // shape matches the schema passed to run_agent
+  expiresAt: string | null;
+  creditsUsed: number | null;
 }
 ```
-
-> `data.data` shape matches the schema passed to `run_agent`.
 
 </details>
 
@@ -549,16 +480,11 @@ DESTRUCTIVE — REQUIRES EXPLICIT USER CONFIRMATION BEFORE CALLING. Requests can
 - `job_id` (string, required) — Agent job ID to cancel.
 ```
 
-**Output:**
+**Output `data` schema:**
 
-```json
+```typescript
 {
-  "success": true,
-  "statusCode": 200,
-  "retriable": false,
-  "retry_after_seconds": null,
-  "error": null,
-  "data": { "status": "cancelled" }
+  status: string;
 }
 ```
 
@@ -581,30 +507,21 @@ Executes code or a natural language prompt in the live browser session bound to 
 - `timeout` (int, optional, default: 30) — Execution timeout in seconds (1–300).
 ```
 
-**Output:**
+**Output `data` schema:**
 
-```json
+```typescript
 {
-  "success": true,
-  "statusCode": 200,
-  "retriable": false,
-  "retry_after_seconds": null,
-  "error": null,
-  "data": {
-    "cdpUrl": "wss://browser.firecrawl.dev/...",
-    "liveViewUrl": null,
-    "interactiveLiveViewUrl": null,
-    "output": null,
-    "stdout": "",
-    "result": "{\"title\": \"Example\"}",
-    "stderr": null,
-    "exitCode": 0,
-    "killed": false
-  }
+  cdpUrl: string | null;
+  liveViewUrl: string | null;
+  interactiveLiveViewUrl: string | null;
+  output: string | null;      // AI response when using prompt_text
+  stdout: string | null;
+  result: string | null;
+  stderr: string | null;
+  exitCode: number | null;
+  killed: boolean | null;
 }
 ```
-
-> When using `prompt_text`, `output` contains the AI response and `result`/`stdout`/`exitCode` are null.
 
 </details>
 
@@ -619,16 +536,11 @@ DESTRUCTIVE — REQUIRES EXPLICIT USER CONFIRMATION BEFORE CALLING. Destroys the
 - `scrape_id` (string, required) — Scrape job ID whose browser session to close (same ID used in browser_interact).
 ```
 
-**Output:**
+**Output `data` schema:**
 
-```json
+```typescript
 {
-  "success": true,
-  "statusCode": 200,
-  "retriable": false,
-  "retry_after_seconds": null,
-  "error": null,
-  "data": { "status": "closed" }
+  status: string;
 }
 ```
 
@@ -652,27 +564,18 @@ Searches Firecrawl's academic research index by topic, method, benchmark, or aut
 - `to_date` (string, optional) — Inclusive upper bound on paper date in YYYY-MM-DD format.
 ```
 
-**Output:**
+**Output `data` schema:**
 
-```json
+```typescript
 {
-  "success": true,
-  "statusCode": 200,
-  "retriable": false,
-  "retry_after_seconds": null,
-  "error": null,
-  "data": {
-    "results": [
-      {
-        "paperId": "2014215642691656232",
-        "primaryId": "arxiv:2105.05233",
-        "ids": { "arxiv": ["2105.05233"] },
-        "title": "Diffusion Models Beat GANs on Image Synthesis",
-        "abstract": "We show that diffusion models can achieve...",
-        "score": 0.016
-      }
-    ]
-  }
+  results: {
+    paperId: string | null;
+    primaryId: string | null;
+    ids: { arxiv: string[] | null; } | null;
+    title: string | null;
+    abstract: string | null;
+    score: number | null;
+  }[];
 }
 ```
 
@@ -690,28 +593,21 @@ Retrieves full details for a specific research paper by its ID. Returns title, a
 - `k` (int, optional) — Number of related papers to include alongside the paper details.
 ```
 
-**Output:**
+**Output `data` schema:**
 
-```json
+```typescript
 {
-  "success": true,
-  "statusCode": 200,
-  "retriable": false,
-  "retry_after_seconds": null,
-  "error": null,
-  "data": {
-    "paper": {
-      "paperId": "2014215642691656232",
-      "primaryId": "arxiv:2105.05233",
-      "ids": { "arxiv": ["2105.05233"] },
-      "title": "Diffusion Models Beat GANs on Image Synthesis",
-      "abstract": "We show that diffusion models can achieve...",
-      "authors": "Dhariwal, Nichol",
-      "categories": ["cs.LG", "cs.CV"],
-      "createdDate": "Wed, 11 May 2021 18:01:01 GMT",
-      "updateDate": "Wed, 11 May 2021 18:01:01 GMT"
-    }
-  }
+  paper: {
+    paperId: string | null;
+    primaryId: string | null;
+    ids: { arxiv: string[] | null; } | null;
+    title: string | null;
+    abstract: string | null;
+    authors: string | null;
+    categories: string[] | null;
+    createdDate: string | null;
+    updateDate: string | null;
+  };
 }
 ```
 
@@ -732,28 +628,19 @@ Finds papers related to a seed paper, ranked by semantic relevance to an intent.
 - `rerank` (bool, optional, default: false) — Apply an additional reranking pass over the fused candidate set.
 ```
 
-**Output:**
+**Output `data` schema:**
 
-```json
+```typescript
 {
-  "success": true,
-  "statusCode": 200,
-  "retriable": false,
-  "retry_after_seconds": null,
-  "error": null,
-  "data": {
-    "results": [
-      {
-        "paperId": "2006114239201234567",
-        "primaryId": "arxiv:2006.11239",
-        "title": "Denoising Diffusion Probabilistic Models",
-        "abstract": "We present high quality image synthesis...",
-        "score": 0.032
-      }
-    ],
-    "poolSize": 40,
-    "truncated": false
-  }
+  results: {
+    paperId: string | null;
+    primaryId: string | null;
+    title: string | null;
+    abstract: string | null;
+    score: number | null;
+  }[];
+  poolSize: number | null;
+  truncated: boolean | null;
 }
 ```
 
@@ -771,33 +658,22 @@ Searches GitHub issue history, pull requests, discussions, and repository README
 - `k` (int, optional, default: 20) — Maximum number of results to return (1–100).
 ```
 
-**Output:**
+**Output `data` schema:**
 
-```json
+```typescript
 {
-  "success": true,
-  "statusCode": 200,
-  "retriable": false,
-  "retry_after_seconds": null,
-  "error": null,
-  "data": {
-    "results": [
-      {
-        "resultType": "issue",
-        "repo": "mendableai/firecrawl",
-        "url": "https://github.com/mendableai/firecrawl/issues/123",
-        "pageType": null,
-        "number": 123,
-        "title": "Worker shutdown race condition",
-        "snippet": "Queue worker shutdown can lose in-flight jobs...",
-        "contentMd": null
-      }
-    ]
-  }
+  results: {
+    resultType: string | null;   // issue | pull_request | repository | discussion
+    repo: string | null;
+    url: string | null;
+    pageType: string | null;
+    number: number | null;
+    title: string | null;
+    snippet: string | null;
+    contentMd: string | null;
+  }[];
 }
 ```
-
-> `resultType` values: `issue`, `pull_request`, `repository`, `discussion`
 
 </details>
 
@@ -809,25 +685,29 @@ Searches GitHub issue history, pull requests, discussions, and repository README
 
 Every tool returns the same top-level envelope. Only `data` varies per tool.
 
-```json
+```typescript
 // Success
 {
-  "success": true,
-  "statusCode": 200,
-  "retriable": false,
-  "retry_after_seconds": null,
-  "error": null,
-  "data": { ... }
+  success: true;
+  statusCode: number;
+  retriable: false;
+  retry_after_seconds: null;
+  error: null;
+  data: { ... };   // schema shown per tool above
 }
 
 // Error
 {
-  "success": false,
-  "statusCode": 400,
-  "retriable": false,
-  "retry_after_seconds": null,
-  "error": { "code": "VALIDATION_ERROR", "message": "url cannot be empty", "details": {} },
-  "data": null
+  success: false;
+  statusCode: number;
+  retriable: boolean;
+  retry_after_seconds: number | null;
+  error: {
+    code: string;    // VALIDATION_ERROR | AUTH_ERROR | UPSTREAM_ERROR | SERVER_ERROR
+    message: string;
+    details: object;
+  };
+  data: null;
 }
 ```
 
