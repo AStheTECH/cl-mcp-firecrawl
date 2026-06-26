@@ -28,22 +28,13 @@ def _auth_headers() -> dict[str, str]:
     }
 
 
-def map_retriable(
-    status: int, retry_after_header: str | None = None
-) -> tuple[bool, int | None]:
-    """Returns (retriable, retry_after_seconds) from HTTP status."""
-    retry_after: int | None = None
-    if retry_after_header:
-        try:
-            retry_after = int(retry_after_header)
-        except ValueError:
-            pass
-
-    if status in (500, 502, 503):
-        return True, None
-    if status == 429:
-        return True, retry_after
-    return False, None
+def _parse_retry_after(header: str | None) -> int | None:
+    if not header:
+        return None
+    try:
+        return int(header)
+    except ValueError:
+        return None
 
 
 def firecrawl_request(
@@ -74,8 +65,7 @@ def firecrawl_request(
         data = {"success": False, "error": resp.text or "Empty response body"}
 
     retry_after_hdr = resp.headers.get("Retry-After")
-    retriable, retry_after = map_retriable(resp.status_code, retry_after_hdr)
-    return data, resp.status_code, retry_after
+    return data, resp.status_code, _parse_retry_after(retry_after_hdr)
 
 
 def firecrawl_multipart(
@@ -106,5 +96,4 @@ def firecrawl_multipart(
         data = {"success": False, "error": resp.text or "Empty response body"}
 
     retry_after_hdr = resp.headers.get("Retry-After")
-    _, retry_after = map_retriable(resp.status_code, retry_after_hdr)
-    return data, resp.status_code, retry_after
+    return data, resp.status_code, _parse_retry_after(retry_after_hdr)

@@ -4,7 +4,6 @@ import requests
 
 from ..logging_utils import ToolLogger
 from ..schemas import ToolError
-from ..service import map_retriable
 
 _SCRAPE_FORMATS_NOTE = (
     "Output formats to request: markdown (default), html, rawHtml, links, screenshot, "
@@ -61,7 +60,7 @@ def _handle_request_exc(result_class, tlog: ToolLogger, exc: Exception):
 
 def _upstream_err(result_class, tlog: ToolLogger, status: int, data: dict,
                   retry_after: int | None = None):
-    retriable, _ = map_retriable(status)
+    retriable = status in (429, 500, 502, 503)
     tlog.failure("UPSTREAM_ERROR", f"HTTP {status}")
     msg = data.get("error") or data.get("message") or f"HTTP {status}"
     return result_class(
