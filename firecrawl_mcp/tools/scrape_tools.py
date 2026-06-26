@@ -19,7 +19,13 @@ from ..schemas import (
     ScrapeData,
     ScrapeResult,
 )
-from ._helpers import _err, _handle_request_exc, _upstream_err, _SCRAPE_FORMATS_NOTE, _PROXY_NOTE
+from ._helpers import (
+    _err,
+    _handle_request_exc,
+    _upstream_err,
+    _SCRAPE_FORMATS_NOTE,
+    _PROXY_NOTE,
+)
 
 logger = logging.getLogger("firecrawl-mcp.tools.scrape")
 
@@ -39,7 +45,9 @@ def register_scrape_tools(mcp: FastMCP) -> None:
     )
     def scrape_url(
         url: str = Field(description="Full URL to scrape, including https://."),
-        formats: list[str] = Field(default=["markdown"], description=_SCRAPE_FORMATS_NOTE),
+        formats: list[str] = Field(
+            default=["markdown"], description=_SCRAPE_FORMATS_NOTE
+        ),
         only_main_content: bool = Field(
             default=True,
             description="Strip navigation, headers, footers, and ads — keep the article/content body.",
@@ -54,7 +62,10 @@ def register_scrape_tools(mcp: FastMCP) -> None:
         ),
         mobile: bool = Field(default=False, description="Emulate a mobile viewport."),
         proxy: str = Field(default="auto", description=_PROXY_NOTE),
-        block_ads: bool = Field(default=True, description="Block ads and cookie consent banners before capturing."),
+        block_ads: bool = Field(
+            default=True,
+            description="Block ads and cookie consent banners before capturing.",
+        ),
         include_tags: list[str] | None = Field(
             default=None,
             description="HTML tags to include in output (e.g. ['article', 'main']). Omit to include all.",
@@ -70,9 +81,21 @@ def register_scrape_tools(mcp: FastMCP) -> None:
     ) -> ScrapeResult:
         tlog = ToolLogger(logger, "scrape_url")
         if wait_for < 0 or wait_for > 30000:
-            return _err(ScrapeResult, tlog, "VALIDATION_ERROR", "wait_for must be 0–30000 ms", 400)
+            return _err(
+                ScrapeResult,
+                tlog,
+                "VALIDATION_ERROR",
+                "wait_for must be 0–30000 ms",
+                400,
+            )
         if timeout_ms < 1000 or timeout_ms > 300000:
-            return _err(ScrapeResult, tlog, "VALIDATION_ERROR", "timeout_ms must be 1000–300000", 400)
+            return _err(
+                ScrapeResult,
+                tlog,
+                "VALIDATION_ERROR",
+                "timeout_ms must be 1000–300000",
+                400,
+            )
 
         body: dict = {
             "url": url,
@@ -92,13 +115,17 @@ def register_scrape_tools(mcp: FastMCP) -> None:
 
         try:
             data, status, retry_after = service.firecrawl_request(
-                "POST", "/scrape", body=body,
+                "POST",
+                "/scrape",
+                body=body,
                 timeout=(CONNECT_TIMEOUT, READ_TIMEOUT),
             )
             if 200 <= status < 300:
                 raw = data.get("data") or {}
                 tlog.success()
-                return ScrapeResult(success=True, statusCode=status, data=ScrapeData(**raw))
+                return ScrapeResult(
+                    success=True, statusCode=status, data=ScrapeData(**raw)
+                )
             return _upstream_err(ScrapeResult, tlog, status, data, retry_after)
         except Exception as exc:
             return _handle_request_exc(ScrapeResult, tlog, exc)
@@ -110,21 +137,45 @@ def register_scrape_tools(mcp: FastMCP) -> None:
             "Use `get_batch_scrape_status` to poll for completion and retrieve scraped content. "
             "Ideal for scraping 5–1000 URLs in parallel without blocking."
         ),
-        annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, openWorldHint=True),
+        annotations=ToolAnnotations(
+            readOnlyHint=False, destructiveHint=False, openWorldHint=True
+        ),
     )
     def batch_scrape_urls(
         urls: list[str] = Field(description="List of URLs to scrape."),
-        formats: list[str] = Field(default=["markdown"], description=_SCRAPE_FORMATS_NOTE),
-        only_main_content: bool = Field(default=True, description="Strip navigation, headers, footers, and ads from each page."),
+        formats: list[str] = Field(
+            default=["markdown"], description=_SCRAPE_FORMATS_NOTE
+        ),
+        only_main_content: bool = Field(
+            default=True,
+            description="Strip navigation, headers, footers, and ads from each page.",
+        ),
         proxy: str = Field(default="auto", description=_PROXY_NOTE),
-        block_ads: bool = Field(default=True, description="Block ads and cookie banners."),
-        remove_base64_images: bool = Field(default=True, description="Drop inline base64 images to reduce response size."),
-        ignore_invalid_urls: bool = Field(default=False, description="Skip invalid URLs instead of failing the entire job."),
-        max_concurrency: int | None = Field(default=None, description="Maximum simultaneous scrapes (leave None for Firecrawl default)."),
+        block_ads: bool = Field(
+            default=True, description="Block ads and cookie banners."
+        ),
+        remove_base64_images: bool = Field(
+            default=True,
+            description="Drop inline base64 images to reduce response size.",
+        ),
+        ignore_invalid_urls: bool = Field(
+            default=False,
+            description="Skip invalid URLs instead of failing the entire job.",
+        ),
+        max_concurrency: int | None = Field(
+            default=None,
+            description="Maximum simultaneous scrapes (leave None for Firecrawl default).",
+        ),
     ) -> BatchScrapeStartResult:
         tlog = ToolLogger(logger, "batch_scrape_urls")
         if not urls:
-            return _err(BatchScrapeStartResult, tlog, "VALIDATION_ERROR", "urls list cannot be empty", 400)
+            return _err(
+                BatchScrapeStartResult,
+                tlog,
+                "VALIDATION_ERROR",
+                "urls list cannot be empty",
+                400,
+            )
 
         body: dict = {
             "urls": urls,
@@ -140,20 +191,25 @@ def register_scrape_tools(mcp: FastMCP) -> None:
 
         try:
             data, status, retry_after = service.firecrawl_request(
-                "POST", "/batch/scrape", body=body,
+                "POST",
+                "/batch/scrape",
+                body=body,
                 timeout=(CONNECT_TIMEOUT, POLL_TIMEOUT),
             )
             if 200 <= status < 300:
                 tlog.success()
                 return BatchScrapeStartResult(
-                    success=True, statusCode=status,
+                    success=True,
+                    statusCode=status,
                     data=BatchScrapeStartData(
                         id=data.get("id", ""),
                         url=data.get("url"),
                         invalidURLs=data.get("invalidURLs"),
                     ),
                 )
-            return _upstream_err(BatchScrapeStartResult, tlog, status, data, retry_after)
+            return _upstream_err(
+                BatchScrapeStartResult, tlog, status, data, retry_after
+            )
         except Exception as exc:
             return _handle_request_exc(BatchScrapeStartResult, tlog, exc)
 
@@ -167,23 +223,37 @@ def register_scrape_tools(mcp: FastMCP) -> None:
         annotations=ToolAnnotations(readOnlyHint=True, openWorldHint=True),
     )
     def get_batch_scrape_status(
-        job_id: str = Field(description="Batch scrape job ID returned by `batch_scrape_urls`."),
+        job_id: str = Field(
+            description="Batch scrape job ID returned by `batch_scrape_urls`."
+        ),
     ) -> BatchScrapeStatusResult:
         tlog = ToolLogger(logger, "get_batch_scrape_status")
         if not job_id.strip():
-            return _err(BatchScrapeStatusResult, tlog, "VALIDATION_ERROR", "job_id cannot be empty", 400)
+            return _err(
+                BatchScrapeStatusResult,
+                tlog,
+                "VALIDATION_ERROR",
+                "job_id cannot be empty",
+                400,
+            )
         try:
             data, status, retry_after = service.firecrawl_request(
-                "GET", f"/batch/scrape/{job_id}",
+                "GET",
+                f"/batch/scrape/{job_id}",
                 timeout=(CONNECT_TIMEOUT, POLL_TIMEOUT),
             )
             if 200 <= status < 300:
                 tlog.success()
                 return BatchScrapeStatusResult(
-                    success=True, statusCode=status,
-                    data=BatchScrapeStatusData(**{k: v for k, v in data.items() if k != "success"}),
+                    success=True,
+                    statusCode=status,
+                    data=BatchScrapeStatusData(
+                        **{k: v for k, v in data.items() if k != "success"}
+                    ),
                 )
-            return _upstream_err(BatchScrapeStatusResult, tlog, status, data, retry_after)
+            return _upstream_err(
+                BatchScrapeStatusResult, tlog, status, data, retry_after
+            )
         except Exception as exc:
             return _handle_request_exc(BatchScrapeStatusResult, tlog, exc)
 
@@ -198,23 +268,29 @@ def register_scrape_tools(mcp: FastMCP) -> None:
             "You MUST stop, tell the user exactly which batch scrape job will be cancelled and that "
             "unfinished results will be permanently lost, and wait for their explicit written confirmation before proceeding."
         ),
-        annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=True, openWorldHint=True),
+        annotations=ToolAnnotations(
+            readOnlyHint=False, destructiveHint=True, openWorldHint=True
+        ),
     )
     def cancel_batch_scrape(
         job_id: str = Field(description="Batch scrape job ID to cancel."),
     ) -> CancelResult:
         tlog = ToolLogger(logger, "cancel_batch_scrape")
         if not job_id.strip():
-            return _err(CancelResult, tlog, "VALIDATION_ERROR", "job_id cannot be empty", 400)
+            return _err(
+                CancelResult, tlog, "VALIDATION_ERROR", "job_id cannot be empty", 400
+            )
         try:
             data, status, retry_after = service.firecrawl_request(
-                "DELETE", f"/batch/scrape/{job_id}",
+                "DELETE",
+                f"/batch/scrape/{job_id}",
                 timeout=(CONNECT_TIMEOUT, POLL_TIMEOUT),
             )
             if 200 <= status < 300:
                 tlog.success()
                 return CancelResult(
-                    success=True, statusCode=status,
+                    success=True,
+                    statusCode=status,
                     data=CancelData(status=data.get("status", "cancelled")),
                 )
             return _upstream_err(CancelResult, tlog, status, data, retry_after)

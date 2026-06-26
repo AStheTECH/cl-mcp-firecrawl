@@ -25,27 +25,26 @@ Perfect for:
 <details>
 <summary><code>scrape_url</code> — Scrape a single URL</summary>
 
-Scrapes a single URL and returns content in one or more formats. Supports JavaScript rendering, mobile emulation, proxy selection, and HTML tag filtering.
+Scrapes a single URL and returns its content in the requested formats. Returns the page as markdown, HTML, screenshot, links, or a summary. For public document URLs (PDF, DOCX) Firecrawl auto-detects and parses them. The response includes `data.metadata.scrapeId` which can be passed to `browser_interact` to continue interacting with the same live browser session.
 
 **Inputs:**
 ```
-- `url` (string, required) — Full URL to scrape, including https://
-- `formats` (list[string], optional) — Output formats: markdown, html, rawHtml, screenshot, links, images, summary (default: ["markdown"])
-- `only_main_content` (bool, optional) — Strip navigation, headers, footers, and ads (default: true)
-- `wait_for` (int, optional) — Milliseconds to wait for JS rendering before capture (0–30000, default: 0)
-- `timeout_ms` (int, optional) — Total request timeout in milliseconds (1000–300000, default: 30000)
-- `mobile` (bool, optional) — Emulate a mobile viewport (default: false)
-- `proxy` (string, optional) — Proxy type: basic, enhanced, or auto (default: auto)
-- `block_ads` (bool, optional) — Block ads and cookie consent banners (default: true)
-- `include_tags` (list[string], optional) — HTML tags to include in output
-- `exclude_tags` (list[string], optional) — HTML tags to exclude from output
-- `remove_base64_images` (bool, optional) — Drop inline base64 images to reduce response size (default: true)
+- `url` (string, required) — Full URL to scrape, including https://.
+- `formats` (list[string], optional, default: ["markdown"]) — Output formats to request: markdown (default), html, rawHtml, links, screenshot, summary, json, audio, video, branding, product, menu. Use ['markdown'] for text content, add 'screenshot' for visual capture.
+- `only_main_content` (bool, optional, default: true) — Strip navigation, headers, footers, and ads — keep the article/content body.
+- `wait_for` (int, optional, default: 0) — Milliseconds to wait after page load before capturing (0–30000). Use for JS-rendered pages.
+- `timeout_ms` (int, optional, default: 30000) — Maximum time the page load may take in milliseconds (1000–300000).
+- `mobile` (bool, optional, default: false) — Emulate a mobile viewport.
+- `proxy` (string, optional, default: "auto") — Proxy tier: 'auto' (default), 'basic', or 'enhanced' (stealth, higher credit cost).
+- `block_ads` (bool, optional, default: true) — Block ads and cookie consent banners before capturing.
+- `include_tags` (list[string], optional) — HTML tags to include in output (e.g. ['article', 'main']). Omit to include all.
+- `exclude_tags` (list[string], optional) — HTML tags to strip from output (e.g. ['nav', 'footer', 'aside']).
+- `remove_base64_images` (bool, optional, default: true) — Drop inline base64 images from markdown output to reduce token usage.
 ```
 
 **Output:**
 
 ```json
-// Success
 {
   "success": true,
   "statusCode": 200,
@@ -74,19 +73,7 @@ Scrapes a single URL and returns content in one or more formats. Supports JavaSc
     "warning": null
   }
 }
-
-// Error
-{
-  "success": false,
-  "statusCode": 400,
-  "retriable": false,
-  "retry_after_seconds": null,
-  "error": { "code": "VALIDATION_ERROR", "message": "url cannot be empty", "details": {} },
-  "data": null
-}
 ```
-
-> Rate-limited errors return `"retriable": true` and `"retry_after_seconds": 60`.
 
 </details>
 
@@ -94,24 +81,23 @@ Scrapes a single URL and returns content in one or more formats. Supports JavaSc
 <details>
 <summary><code>batch_scrape_urls</code> — Start a batch scrape job</summary>
 
-Starts an async job to scrape multiple URLs in parallel. Returns a job ID — poll with `get_batch_scrape_status`.
+Starts an async batch scrape job for a list of URLs. Returns a job ID immediately. Use `get_batch_scrape_status` to poll for completion and retrieve scraped content. Ideal for scraping 5–1000 URLs in parallel without blocking.
 
 **Inputs:**
 ```
-- `urls` (list[string], required) — List of URLs to scrape (minimum 1)
-- `formats` (list[string], optional) — Output formats (default: ["markdown"])
-- `only_main_content` (bool, optional) — Strip navigation and ads (default: true)
-- `proxy` (string, optional) — Proxy type: basic, enhanced, or auto (default: auto)
-- `block_ads` (bool, optional) — Block ads and cookie banners (default: true)
-- `remove_base64_images` (bool, optional) — Drop base64 images (default: true)
-- `ignore_invalid_urls` (bool, optional) — Skip invalid URLs instead of failing (default: false)
-- `max_concurrency` (int, optional) — Maximum simultaneous scrapes (Firecrawl default if omitted)
+- `urls` (list[string], required) — List of URLs to scrape.
+- `formats` (list[string], optional, default: ["markdown"]) — Output formats to request: markdown (default), html, rawHtml, links, screenshot, summary, json, audio, video, branding, product, menu. Use ['markdown'] for text content, add 'screenshot' for visual capture.
+- `only_main_content` (bool, optional, default: true) — Strip navigation, headers, footers, and ads from each page.
+- `proxy` (string, optional, default: "auto") — Proxy tier: 'auto' (default), 'basic', or 'enhanced' (stealth, higher credit cost).
+- `block_ads` (bool, optional, default: true) — Block ads and cookie banners.
+- `remove_base64_images` (bool, optional, default: true) — Drop inline base64 images to reduce response size.
+- `ignore_invalid_urls` (bool, optional, default: false) — Skip invalid URLs instead of failing the entire job.
+- `max_concurrency` (int, optional) — Maximum simultaneous scrapes (leave None for Firecrawl default).
 ```
 
 **Output:**
 
 ```json
-// Success
 {
   "success": true,
   "statusCode": 200,
@@ -124,19 +110,7 @@ Starts an async job to scrape multiple URLs in parallel. Returns a job ID — po
     "invalidURLs": []
   }
 }
-
-// Error
-{
-  "success": false,
-  "statusCode": 400,
-  "retriable": false,
-  "retry_after_seconds": null,
-  "error": { "code": "VALIDATION_ERROR", "message": "urls cannot be empty", "details": {} },
-  "data": null
-}
 ```
-
-> Rate-limited errors return `"retriable": true` and `"retry_after_seconds": 60`.
 
 </details>
 
@@ -144,17 +118,16 @@ Starts an async job to scrape multiple URLs in parallel. Returns a job ID — po
 <details>
 <summary><code>get_batch_scrape_status</code> — Poll batch scrape status</summary>
 
-Returns the current status and completed results of a batch scrape job.
+Polls the status of a batch scrape job started by `batch_scrape_urls`. Returns status (scraping/completed/failed), progress counters, and scraped pages when done. If `data.next` is present in the response, call again with the same job_id to get the next page of results.
 
 **Inputs:**
 ```
-- `job_id` (string, required) — Batch scrape job ID returned by `batch_scrape_urls`
+- `job_id` (string, required) — Batch scrape job ID returned by `batch_scrape_urls`.
 ```
 
 **Output:**
 
 ```json
-// Success
 {
   "success": true,
   "statusCode": 200,
@@ -182,19 +155,7 @@ Returns the current status and completed results of a batch scrape job.
     ]
   }
 }
-
-// Error
-{
-  "success": false,
-  "statusCode": 404,
-  "retriable": false,
-  "retry_after_seconds": null,
-  "error": { "code": "NOT_FOUND", "message": "job not found", "details": {} },
-  "data": null
-}
 ```
-
-> `status` values: `scraping`, `completed`, `failed`, `cancelled`
 
 </details>
 
@@ -202,17 +163,16 @@ Returns the current status and completed results of a batch scrape job.
 <details>
 <summary><code>cancel_batch_scrape</code> — Cancel a batch scrape job</summary>
 
-DESTRUCTIVE — cancels a running batch scrape job. Completed pages are not returned after cancellation.
+DESTRUCTIVE — REQUIRES EXPLICIT USER CONFIRMATION BEFORE CALLING. Stops a running batch scrape job. All in-progress scraping is terminated and any unfinished results are permanently lost — this cannot be undone. NEVER call this tool autonomously or as part of an automated flow. You MUST stop, tell the user exactly which batch scrape job will be cancelled and that unfinished results will be permanently lost, and wait for their explicit written confirmation before proceeding.
 
 **Inputs:**
 ```
-- `job_id` (string, required) — Batch scrape job ID to cancel
+- `job_id` (string, required) — Batch scrape job ID to cancel.
 ```
 
 **Output:**
 
 ```json
-// Success
 {
   "success": true,
   "statusCode": 200,
@@ -220,16 +180,6 @@ DESTRUCTIVE — cancels a running batch scrape job. Completed pages are not retu
   "retry_after_seconds": null,
   "error": null,
   "data": { "status": "cancelled" }
-}
-
-// Error
-{
-  "success": false,
-  "statusCode": 404,
-  "retriable": false,
-  "retry_after_seconds": null,
-  "error": { "code": "NOT_FOUND", "message": "job not found", "details": {} },
-  "data": null
 }
 ```
 
@@ -241,29 +191,28 @@ DESTRUCTIVE — cancels a running batch scrape job. Completed pages are not retu
 <details>
 <summary><code>crawl_url</code> — Start a full-site crawl</summary>
 
-Starts an async crawl from a seed URL, following links and scraping discovered pages. Returns a job ID — poll with `get_crawl_status`.
+Starts an async crawl job from a seed URL, following internal links up to the specified depth and page limit. Returns a job ID immediately. Use `get_crawl_status` to poll for progress and results. Use `include_paths`/`exclude_paths` regex patterns to control which URLs are visited. Ideal for extracting all content from a site, documentation, or blog.
 
 **Inputs:**
 ```
-- `url` (string, required) — Seed URL to start crawling from
-- `limit` (int, optional) — Maximum pages to crawl (1–10000, default: 10000)
-- `max_discovery_depth` (int, optional) — Maximum link depth from seed URL (unlimited if omitted)
-- `include_paths` (list[string], optional) — Regex patterns — only matching URLs are crawled
-- `exclude_paths` (list[string], optional) — Regex patterns — matching URLs are skipped
-- `sitemap` (string, optional) — Sitemap mode: skip, include, or only (default: include)
-- `allow_subdomains` (bool, optional) — Follow links to subdomains (default: false)
-- `allow_external_links` (bool, optional) — Follow links to external domains (default: false)
-- `ignore_query_parameters` (bool, optional) — Treat URLs differing only in query params as duplicates (default: false)
-- `formats` (list[string], optional) — Output formats (default: ["markdown"])
-- `only_main_content` (bool, optional) — Strip navigation and ads (default: true)
-- `proxy` (string, optional) — Proxy type: basic, enhanced, or auto (default: auto)
-- `block_ads` (bool, optional) — Block ads and cookie banners (default: true)
+- `url` (string, required) — Seed URL to start crawling from.
+- `limit` (int, optional, default: 10000) — Maximum number of pages to crawl (1–10000).
+- `max_discovery_depth` (int, optional) — Maximum link depth from the seed URL. Omit for unlimited.
+- `include_paths` (list[string], optional) — Regex patterns — only URLs matching at least one pattern are crawled.
+- `exclude_paths` (list[string], optional) — Regex patterns — URLs matching any pattern are skipped.
+- `sitemap` (string, optional, default: "include") — Sitemap usage: 'include' (use sitemap + crawl), 'skip' (crawl only), 'only' (sitemap only).
+- `allow_subdomains` (bool, optional, default: false) — Follow links to subdomains of the seed URL.
+- `allow_external_links` (bool, optional, default: false) — Follow links to entirely different domains.
+- `ignore_query_parameters` (bool, optional, default: false) — Treat URLs that differ only in query parameters as duplicates.
+- `formats` (list[string], optional, default: ["markdown"]) — Output formats to request: markdown (default), html, rawHtml, links, screenshot, summary, json, audio, video, branding, product, menu. Use ['markdown'] for text content, add 'screenshot' for visual capture.
+- `only_main_content` (bool, optional, default: true) — Strip navigation, headers, footers, and ads from each page.
+- `proxy` (string, optional, default: "auto") — Proxy tier: 'auto' (default), 'basic', or 'enhanced' (stealth, higher credit cost).
+- `block_ads` (bool, optional, default: true) — Block ads and cookie banners.
 ```
 
 **Output:**
 
 ```json
-// Success
 {
   "success": true,
   "statusCode": 200,
@@ -275,19 +224,7 @@ Starts an async crawl from a seed URL, following links and scraping discovered p
     "url": "https://api.firecrawl.dev/v2/crawl/crawl-job-uuid"
   }
 }
-
-// Error
-{
-  "success": false,
-  "statusCode": 400,
-  "retriable": false,
-  "retry_after_seconds": null,
-  "error": { "code": "VALIDATION_ERROR", "message": "url cannot be empty", "details": {} },
-  "data": null
-}
 ```
-
-> Rate-limited errors return `"retriable": true` and `"retry_after_seconds": 60`.
 
 </details>
 
@@ -295,17 +232,16 @@ Starts an async crawl from a seed URL, following links and scraping discovered p
 <details>
 <summary><code>get_crawl_status</code> — Poll crawl status</summary>
 
-Returns the current status, progress, and completed page data for a crawl job.
+Polls the status of a crawl job started by `crawl_url`. Returns status (scraping/completed/failed/cancelled), progress counters, and crawled pages. If `data.next` is present, call again to retrieve the next page of results.
 
 **Inputs:**
 ```
-- `job_id` (string, required) — Crawl job ID returned by `crawl_url`
+- `job_id` (string, required) — Crawl job ID returned by `crawl_url`.
 ```
 
 **Output:**
 
 ```json
-// Success
 {
   "success": true,
   "statusCode": 200,
@@ -336,19 +272,7 @@ Returns the current status, progress, and completed page data for a crawl job.
     ]
   }
 }
-
-// Error
-{
-  "success": false,
-  "statusCode": 404,
-  "retriable": false,
-  "retry_after_seconds": null,
-  "error": { "code": "NOT_FOUND", "message": "job not found", "details": {} },
-  "data": null
-}
 ```
-
-> `status` values: `crawling`, `completed`, `failed`, `cancelled`
 
 </details>
 
@@ -356,17 +280,16 @@ Returns the current status, progress, and completed page data for a crawl job.
 <details>
 <summary><code>cancel_crawl</code> — Cancel a crawl job</summary>
 
-DESTRUCTIVE — cancels a running crawl job. Already-scraped pages are not returned after cancellation.
+DESTRUCTIVE — REQUIRES EXPLICIT USER CONFIRMATION BEFORE CALLING. Stops a running crawl job. All in-progress crawling is terminated and any unfinished pages are permanently lost — this cannot be undone. NEVER call this tool autonomously or as part of an automated flow. You MUST stop, tell the user which crawl job will be cancelled and that unfinished pages will be permanently lost, and wait for their explicit written confirmation before proceeding.
 
 **Inputs:**
 ```
-- `job_id` (string, required) — Crawl job ID to cancel
+- `job_id` (string, required) — Crawl job ID to cancel.
 ```
 
 **Output:**
 
 ```json
-// Success
 {
   "success": true,
   "statusCode": 200,
@@ -374,16 +297,6 @@ DESTRUCTIVE — cancels a running crawl job. Already-scraped pages are not retur
   "retry_after_seconds": null,
   "error": null,
   "data": { "status": "cancelled" }
-}
-
-// Error
-{
-  "success": false,
-  "statusCode": 404,
-  "retriable": false,
-  "retry_after_seconds": null,
-  "error": { "code": "NOT_FOUND", "message": "job not found", "details": {} },
-  "data": null
 }
 ```
 
@@ -395,24 +308,23 @@ DESTRUCTIVE — cancels a running crawl job. Already-scraped pages are not retur
 <details>
 <summary><code>map_url</code> — Map all URLs on a website</summary>
 
-Discovers and lists all URLs found on a website without scraping page content. Useful for site auditing and planning crawls.
+Discovers all URLs on a website without scraping their content. Returns a list of links with title and description. Use before `crawl_url` to understand site structure, or pass `search` to filter URLs by relevance to a topic. Much faster and cheaper than crawling when you only need the URL list.
 
 **Inputs:**
 ```
-- `url` (string, required) — Root URL of the site to map
-- `search` (string, optional) — Filter and rank URLs by relevance to this query
-- `sitemap` (string, optional) — Sitemap mode: skip, include, or only (default: include)
-- `include_subdomains` (bool, optional) — Include URLs from subdomains (default: true)
-- `ignore_query_parameters` (bool, optional) — Deduplicate URLs differing only in query params (default: true)
-- `ignore_cache` (bool, optional) — Bypass sitemap cache for fresh results (default: false)
-- `limit` (int, optional) — Maximum URLs to return (1–100000, default: 5000)
-- `country` (string, optional) — ISO 3166-1 alpha-2 country code for geo-targeting (e.g. "US")
+- `url` (string, required) — Root URL of the site to map.
+- `search` (string, optional) — Filter and rank URLs by relevance to this search query.
+- `sitemap` (string, optional, default: "include") — 'include' (sitemap + crawl), 'skip' (crawl only), 'only' (sitemap only).
+- `include_subdomains` (bool, optional, default: true) — Include URLs from subdomains of the root URL.
+- `ignore_query_parameters` (bool, optional, default: true) — Deduplicate URLs that differ only in query parameters.
+- `ignore_cache` (bool, optional, default: false) — Bypass sitemap cache to get the freshest URL list.
+- `limit` (int, optional, default: 5000) — Maximum number of URLs to return (1–100000).
+- `country` (string, optional) — ISO 3166-1 alpha-2 country code for geo-targeting (e.g. 'US', 'DE').
 ```
 
 **Output:**
 
 ```json
-// Success
 {
   "success": true,
   "statusCode": 200,
@@ -426,16 +338,6 @@ Discovers and lists all URLs found on a website without scraping page content. U
     ]
   }
 }
-
-// Error
-{
-  "success": false,
-  "statusCode": 400,
-  "retriable": false,
-  "retry_after_seconds": null,
-  "error": { "code": "VALIDATION_ERROR", "message": "url cannot be empty", "details": {} },
-  "data": null
-}
 ```
 
 </details>
@@ -444,27 +346,26 @@ Discovers and lists all URLs found on a website without scraping page content. U
 <details>
 <summary><code>search_web</code> — Search the web</summary>
 
-Searches the web and optionally scrapes the full content of result pages. Supports web, news, and image sources with geo-targeting and time filtering.
+Searches the web and optionally scrapes the full content of each result. Returns web pages, images, or news depending on `sources`. Set `scrape_formats` to ['markdown'] to get full page content alongside each result — omit to get only title, description, and URL. Supports operator syntax: site:, filetype:, intitle:, -exclude, "exact phrase".
 
 **Inputs:**
 ```
-- `query` (string, required) — Search query (max 500 characters)
-- `limit` (int, optional) — Number of results to return (1–100, default: 10)
-- `sources` (list[string], optional) — Sources: web, news, images (default: ["web"])
-- `categories` (list[string], optional) — Filters: github, research, pdf
-- `country` (string, optional) — ISO country code for geo-targeting (default: US)
-- `location` (string, optional) — Geographic location string (e.g. "San Francisco,California,United States")
-- `tbs` (string, optional) — Time filter: qdr:h, qdr:d, qdr:w, qdr:m, qdr:y
-- `include_domains` (list[string], optional) — Restrict results to these domains
-- `exclude_domains` (list[string], optional) — Exclude results from these domains
-- `scrape_formats` (list[string], optional) — Also scrape result pages in these formats
-- `timeout_ms` (int, optional) — Request timeout in milliseconds (default: 60000)
+- `query` (string, required) — Search query. Supports operators: site:domain.com, filetype:pdf, intitle:keyword, -exclude, "exact phrase", related:domain.com.
+- `limit` (int, optional, default: 10) — Number of results to return (1–100).
+- `sources` (list[string], optional, default: ["web"]) — Result types to return: 'web', 'images', 'news'. Combine as needed.
+- `categories` (list[string], optional) — Filter to specific result categories: 'github', 'research', 'pdf'.
+- `country` (string, optional) — ISO country code for geo-targeted results (e.g. 'US', 'DE', 'JP'). Default: US.
+- `location` (string, optional) — City/region for geo-targeted results (e.g. 'San Francisco,California,United States').
+- `tbs` (string, optional) — Time-based filter: 'qdr:d' (past day), 'qdr:w' (past week), 'qdr:m' (past month).
+- `include_domains` (list[string], optional) — Restrict results to these domains (mutually exclusive with exclude_domains).
+- `exclude_domains` (list[string], optional) — Remove these domains from results (mutually exclusive with include_domains).
+- `scrape_formats` (list[string], optional) — If provided, each result page is scraped and content returned in these formats. Omit to return only title/description/URL without scraping.
+- `timeout_ms` (int, optional, default: 45000) — Request timeout in milliseconds (1000–300000). Default 45000.
 ```
 
 **Output:**
 
 ```json
-// Success
 {
   "success": true,
   "statusCode": 200,
@@ -511,19 +412,7 @@ Searches the web and optionally scrapes the full content of result pages. Suppor
     "creditsUsed": 5
   }
 }
-
-// Error
-{
-  "success": false,
-  "statusCode": 400,
-  "retriable": false,
-  "retry_after_seconds": null,
-  "error": { "code": "VALIDATION_ERROR", "message": "query cannot be empty", "details": {} },
-  "data": null
-}
 ```
-
-> Rate-limited errors return `"retriable": true` and `"retry_after_seconds": 60`.
 
 </details>
 
@@ -533,20 +422,19 @@ Searches the web and optionally scrapes the full content of result pages. Suppor
 <details>
 <summary><code>parse_document</code> — Parse a document file</summary>
 
-Parses a document (PDF, DOCX, etc.) provided as base64-encoded bytes and returns the content as markdown or HTML.
+Parses a local or private document (PDF, DOCX, XLSX, HTML, and more) into clean markdown or structured data. Use when the file is not publicly accessible by URL — for public URLs use `scrape_url` instead. The file must be provided as base64-encoded bytes, making this suitable for workflow chains where a previous step fetches and encodes the file content.
 
 **Inputs:**
 ```
-- `file_content_b64` (string, required) — Base64-encoded file bytes
-- `file_name` (string, required) — File name including extension (e.g. "report.pdf") — used to infer file type
-- `formats` (list[string], optional) — Output formats: markdown, html (default: ["markdown"])
-- `only_main_content` (bool, optional) — Strip headers, footers, and decorative content (default: true)
+- `file_content_b64` (string, required) — Base64-encoded file bytes to parse.
+- `file_name` (string, required) — Filename including extension (e.g. 'report.pdf', 'data.docx'). Extension determines parser.
+- `formats` (list[string], optional, default: ["markdown"]) — Output formats: markdown, html, rawHtml, links, summary.
+- `only_main_content` (bool, optional, default: true) — Strip headers, footers, and decorative content.
 ```
 
 **Output:**
 
 ```json
-// Success
 {
   "success": true,
   "statusCode": 200,
@@ -574,16 +462,6 @@ Parses a document (PDF, DOCX, etc.) provided as base64-encoded bytes and returns
     "warning": null
   }
 }
-
-// Error
-{
-  "success": false,
-  "statusCode": 400,
-  "retriable": false,
-  "retry_after_seconds": null,
-  "error": { "code": "VALIDATION_ERROR", "message": "file_content_b64 cannot be empty", "details": {} },
-  "data": null
-}
 ```
 
 </details>
@@ -594,21 +472,20 @@ Parses a document (PDF, DOCX, etc.) provided as base64-encoded bytes and returns
 <details>
 <summary><code>run_agent</code> — Start an autonomous data extraction agent</summary>
 
-Starts an async agent that navigates websites and extracts data based on a natural language prompt. Returns a job ID — poll with `get_agent_status` every 15–30 seconds.
+Starts an autonomous web research agent that searches, navigates, and extracts data based on a natural language prompt. No URLs required — the agent finds them. Use `schema` to get structured JSON output. Returns a job ID; use `get_agent_status` to poll. Use `spark-1-mini` (default, 60% cheaper) for most tasks; `spark-1-pro` for complex multi-domain research. Set `max_credits` to cap spending — the job fails without charges if the limit is hit.
 
 **Inputs:**
 ```
-- `prompt` (string, required) — Natural language description of what data to extract (max 10000 characters)
-- `urls` (list[string], optional) — URLs to constrain the agent to
-- `schema` (string, optional) — JSON schema string to structure the extracted data
-- `model` (string, optional) — spark-1-mini (default, cheaper) or spark-1-pro (higher accuracy)
-- `max_credits` (int, optional) — Maximum credits to spend (Firecrawl default if omitted)
+- `prompt` (string, required) — Natural language description of the data to find (max 10000 chars). Be specific: 'Find the 5 most-funded AI startups in 2024 with founder names and total funding.'
+- `urls` (list[string], optional) — Optional seed URLs to focus the agent. Omit to let the agent search freely.
+- `schema` (string, optional) — JSON schema string for structured output. Omit for free-form text.
+- `model` (string, optional, default: "spark-1-mini") — 'spark-1-mini' (default, cheaper) or 'spark-1-pro' (higher accuracy).
+- `max_credits` (int, optional) — Credit cap for this job (default 2500). Job fails without charges if exceeded.
 ```
 
 **Output:**
 
 ```json
-// Success — job started
 {
   "success": true,
   "statusCode": 200,
@@ -623,19 +500,7 @@ Starts an async agent that navigates websites and extracts data based on a natur
     "creditsUsed": null
   }
 }
-
-// Error
-{
-  "success": false,
-  "statusCode": 400,
-  "retriable": false,
-  "retry_after_seconds": null,
-  "error": { "code": "VALIDATION_ERROR", "message": "prompt cannot be empty", "details": {} },
-  "data": null
-}
 ```
-
-> Rate-limited errors return `"retriable": true` and `"retry_after_seconds": 60`.
 
 </details>
 
@@ -643,17 +508,16 @@ Starts an async agent that navigates websites and extracts data based on a natur
 <details>
 <summary><code>get_agent_status</code> — Poll agent job status</summary>
 
-Returns the current status and results of an agent job. Poll every 15–30 seconds until status is `completed`, `failed`, or `cancelled`.
+Polls the status of an agent job started by `run_agent`. Returns status (processing/completed/failed/cancelled), extracted data when done, and credit usage. Poll every 15–30 seconds; jobs typically complete in 1–5 minutes.
 
 **Inputs:**
 ```
-- `job_id` (string, required) — Agent job ID returned by `run_agent`
+- `job_id` (string, required) — Agent job ID returned by `run_agent`.
 ```
 
 **Output:**
 
 ```json
-// Success — job completed
 {
   "success": true,
   "statusCode": 200,
@@ -668,19 +532,9 @@ Returns the current status and results of an agent job. Poll every 15–30 secon
     "creditsUsed": 120
   }
 }
-
-// Error
-{
-  "success": false,
-  "statusCode": 404,
-  "retriable": false,
-  "retry_after_seconds": null,
-  "error": { "code": "NOT_FOUND", "message": "job not found", "details": {} },
-  "data": null
-}
 ```
 
-> `status` values: `processing`, `completed`, `failed`, `cancelled`. `data.data` shape matches the schema passed to `run_agent`.
+> `data.data` shape matches the schema passed to `run_agent`.
 
 </details>
 
@@ -688,17 +542,16 @@ Returns the current status and results of an agent job. Poll every 15–30 secon
 <details>
 <summary><code>cancel_agent</code> — Cancel an agent job</summary>
 
-DESTRUCTIVE — cancels a running agent job. Partial results are not returned after cancellation.
+DESTRUCTIVE — REQUIRES EXPLICIT USER CONFIRMATION BEFORE CALLING. Requests cancellation of a running agent job. Any in-progress reasoning steps complete before the job transitions to cancelled — credits for completed steps may still be charged and cannot be recovered. NEVER call this tool autonomously or as part of an automated flow. You MUST stop, tell the user which agent job will be cancelled and the credit implications, and wait for their explicit written confirmation before proceeding.
 
 **Inputs:**
 ```
-- `job_id` (string, required) — Agent job ID to cancel
+- `job_id` (string, required) — Agent job ID to cancel.
 ```
 
 **Output:**
 
 ```json
-// Success
 {
   "success": true,
   "statusCode": 200,
@@ -706,16 +559,6 @@ DESTRUCTIVE — cancels a running agent job. Partial results are not returned af
   "retry_after_seconds": null,
   "error": null,
   "data": { "status": "cancelled" }
-}
-
-// Error
-{
-  "success": false,
-  "statusCode": 404,
-  "retriable": false,
-  "retry_after_seconds": null,
-  "error": { "code": "NOT_FOUND", "message": "job not found", "details": {} },
-  "data": null
 }
 ```
 
@@ -727,21 +570,20 @@ DESTRUCTIVE — cancels a running agent job. Partial results are not returned af
 <details>
 <summary><code>browser_interact</code> — Interact with a browser session</summary>
 
-Runs JavaScript code or a natural language prompt against an active browser session opened by a previous `scrape_url` call. Use `data.metadata.scrapeId` from the scrape response as `scrape_id`. Provide either `code` or `prompt_text`, not both.
+Executes code or a natural language prompt in the live browser session bound to a previous scrape job. The `scrape_id` comes from `data.metadata.scrapeId` in a `scrape_url` response. First call creates the browser session at the same page state as the scrape. Subsequent calls on the same `scrape_id` reuse the live session. Provide either `code` (Playwright/Node/Python/Bash to run) or `prompt_text` (AI-driven navigation), not both. Returns CDP URL, live view URL, stdout, and AI output. Call `browser_close` when done to release the session.
 
 **Inputs:**
 ```
-- `scrape_id` (string, required) — Scrape job ID from `data.metadata.scrapeId` in a `scrape_url` response
-- `code` (string, optional) — JavaScript code to execute in the browser page context
-- `prompt_text` (string, optional) — Natural language instruction for the browser to execute
-- `language` (string, optional) — Code language: javascript or python (default: javascript)
-- `timeout` (int, optional) — Execution timeout in seconds (1–300, default: 30)
+- `scrape_id` (string, required) — Scrape job ID from `data.metadata.scrapeId` in a `scrape_url` response.
+- `code` (string, optional) — Code to execute in the browser sandbox (1–100000 chars). Provide this OR prompt_text, not both.
+- `prompt_text` (string, optional) — Natural language task for the AI browser agent (1–10000 chars). Provide this OR code, not both.
+- `language` (string, optional, default: "node") — Code language when using `code`: 'node' (default), 'python', or 'bash'.
+- `timeout` (int, optional, default: 30) — Execution timeout in seconds (1–300).
 ```
 
 **Output:**
 
 ```json
-// Success — code execution
 {
   "success": true,
   "statusCode": 200,
@@ -760,37 +602,9 @@ Runs JavaScript code or a natural language prompt against an active browser sess
     "killed": false
   }
 }
-
-// Success — prompt execution
-{
-  "success": true,
-  "statusCode": 200,
-  "retriable": false,
-  "retry_after_seconds": null,
-  "error": null,
-  "data": {
-    "cdpUrl": "wss://browser.firecrawl.dev/...",
-    "liveViewUrl": null,
-    "interactiveLiveViewUrl": null,
-    "output": "Clicked the submit button successfully.",
-    "stdout": null,
-    "result": null,
-    "stderr": null,
-    "exitCode": null,
-    "killed": null
-  }
-}
-
-// Error
-{
-  "success": false,
-  "statusCode": 400,
-  "retriable": false,
-  "retry_after_seconds": null,
-  "error": { "code": "VALIDATION_ERROR", "message": "scrape_id cannot be empty", "details": {} },
-  "data": null
-}
 ```
+
+> When using `prompt_text`, `output` contains the AI response and `result`/`stdout`/`exitCode` are null.
 
 </details>
 
@@ -798,17 +612,16 @@ Runs JavaScript code or a natural language prompt against an active browser sess
 <details>
 <summary><code>browser_close</code> — Close a browser session</summary>
 
-DESTRUCTIVE — closes and releases a browser session. Call this when browser interaction is complete to free resources.
+DESTRUCTIVE — REQUIRES EXPLICIT USER CONFIRMATION BEFORE CALLING. Destroys the browser session attached to a scrape job. All browser state, cookies, and session data are permanently lost and the session cannot be resumed — this cannot be undone. Always call this when done interacting to avoid leaking browser resources and credits. NEVER call this tool autonomously or as part of an automated flow. You MUST stop, confirm with the user that the browser session is no longer needed, and wait for their explicit written confirmation before proceeding.
 
 **Inputs:**
 ```
-- `scrape_id` (string, required) — Scrape job ID whose browser session to close
+- `scrape_id` (string, required) — Scrape job ID whose browser session to close (same ID used in browser_interact).
 ```
 
 **Output:**
 
 ```json
-// Success
 {
   "success": true,
   "statusCode": 200,
@@ -816,16 +629,6 @@ DESTRUCTIVE — closes and releases a browser session. Call this when browser in
   "retry_after_seconds": null,
   "error": null,
   "data": { "status": "closed" }
-}
-
-// Error
-{
-  "success": false,
-  "statusCode": 404,
-  "retriable": false,
-  "retry_after_seconds": null,
-  "error": { "code": "NOT_FOUND", "message": "scrape session not found", "details": {} },
-  "data": null
 }
 ```
 
@@ -837,22 +640,21 @@ DESTRUCTIVE — closes and releases a browser session. Call this when browser in
 <details>
 <summary><code>search_papers</code> — Search academic research papers</summary>
 
-Searches Firecrawl's academic research index by topic, method, benchmark, or author. Returns ranked papers with IDs for use in `get_paper` and `find_related_papers`.
+Searches Firecrawl's academic research index by topic, method, benchmark, or author. Returns ranked papers with paperId, title, abstract, and relevance score. Use `paperId` from results to call `get_paper` or `find_related_papers`. Supports filtering by author name substring, category (e.g. 'cs.LG'), and date range.
 
 **Inputs:**
 ```
-- `query` (string, required) — Natural language search query (e.g. "diffusion models image synthesis")
-- `k` (int, optional) — Maximum number of papers to return (1–500, default: 40)
-- `authors` (string, optional) — Filter by author name substring (e.g. "LeCun"). Comma-separate for multiple
-- `categories` (string, optional) — Filter by arXiv category (e.g. "cs.LG", "cs.CV"). Comma-separate for multiple
-- `from_date` (string, optional) — Inclusive start date in YYYY-MM-DD format
-- `to_date` (string, optional) — Inclusive end date in YYYY-MM-DD format
+- `query` (string, required) — Natural language search query (e.g. 'diffusion models image synthesis').
+- `k` (int, optional, default: 40) — Maximum number of ranked papers to return (1–500).
+- `authors` (string, optional) — Filter by author name substring (e.g. 'LeCun'). Comma-separate for multiple.
+- `categories` (string, optional) — Filter by paper category (e.g. 'cs.LG', 'cs.CV'). Comma-separate for multiple.
+- `from_date` (string, optional) — Inclusive lower bound on paper date in YYYY-MM-DD format (e.g. '2023-01-01').
+- `to_date` (string, optional) — Inclusive upper bound on paper date in YYYY-MM-DD format.
 ```
 
 **Output:**
 
 ```json
-// Success
 {
   "success": true,
   "statusCode": 200,
@@ -872,16 +674,6 @@ Searches Firecrawl's academic research index by topic, method, benchmark, or aut
     ]
   }
 }
-
-// Error
-{
-  "success": false,
-  "statusCode": 400,
-  "retriable": false,
-  "retry_after_seconds": null,
-  "error": { "code": "VALIDATION_ERROR", "message": "query cannot be empty", "details": {} },
-  "data": null
-}
 ```
 
 </details>
@@ -890,18 +682,17 @@ Searches Firecrawl's academic research index by topic, method, benchmark, or aut
 <details>
 <summary><code>get_paper</code> — Get full details for a research paper</summary>
 
-Retrieves title, abstract, authors, categories, and dates for a specific paper by its ID.
+Retrieves full details for a specific research paper by its ID. Returns title, abstract, authors, categories, and dates. The `paper_id` can be a canonical paperId (e.g. '2014215642691656232') or a source-prefixed ID (e.g. 'arxiv:2105.05233') from `search_papers` results.
 
 **Inputs:**
 ```
-- `paper_id` (string, required) — Paper ID — canonical paperId or source-prefixed ID (e.g. "arxiv:2105.05233")
-- `k` (int, optional) — Number of related papers to include alongside the paper details
+- `paper_id` (string, required) — Paper ID — either canonical paperId or source-prefixed ID like 'arxiv:2105.05233'.
+- `k` (int, optional) — Number of related papers to include alongside the paper details.
 ```
 
 **Output:**
 
 ```json
-// Success
 {
   "success": true,
   "statusCode": 200,
@@ -922,16 +713,6 @@ Retrieves title, abstract, authors, categories, and dates for a specific paper b
     }
   }
 }
-
-// Error
-{
-  "success": false,
-  "statusCode": 404,
-  "retriable": false,
-  "retry_after_seconds": null,
-  "error": { "code": "NOT_FOUND", "message": "paper not found", "details": {} },
-  "data": null
-}
 ```
 
 </details>
@@ -940,21 +721,20 @@ Retrieves title, abstract, authors, categories, and dates for a specific paper b
 <details>
 <summary><code>find_related_papers</code> — Find papers related to a seed paper</summary>
 
-Finds papers related to a seed paper ranked by semantic relevance to an intent. Ideal for literature review workflows: `search_papers` → `find_related_papers` → `get_paper`.
+Finds papers related to a seed paper, ranked by semantic relevance to an intent. Use `mode` to choose expansion strategy: 'similar' (semantically close), 'citers' (papers that cite the seed), 'references' (papers cited by the seed). Returns ranked results with relevance scores. Ideal for literature review workflows: search_papers → find_related_papers → get_paper.
 
 **Inputs:**
 ```
-- `paper_id` (string, required) — Seed paper ID (canonical paperId or "arxiv:XXXX.XXXXX")
-- `intent` (string, required) — Natural language ranking intent (e.g. "applications in medical imaging")
-- `mode` (string, optional) — Expansion strategy: similar, citers, or references (default: similar)
-- `k` (int, optional) — Maximum related papers to return (1–500, default: 40)
-- `rerank` (bool, optional) — Apply an additional reranking pass over results (default: false)
+- `paper_id` (string, required) — Seed paper ID (canonical paperId or 'arxiv:XXXX.XXXXX').
+- `intent` (string, required) — Natural language ranking intent (e.g. 'applications in medical imaging').
+- `mode` (string, optional, default: "similar") — Expansion mode: 'similar' (default), 'citers', or 'references'.
+- `k` (int, optional, default: 40) — Maximum number of related papers to return (1–500).
+- `rerank` (bool, optional, default: false) — Apply an additional reranking pass over the fused candidate set.
 ```
 
 **Output:**
 
 ```json
-// Success
 {
   "success": true,
   "statusCode": 200,
@@ -975,16 +755,6 @@ Finds papers related to a seed paper ranked by semantic relevance to an intent. 
     "truncated": false
   }
 }
-
-// Error
-{
-  "success": false,
-  "statusCode": 404,
-  "retriable": false,
-  "retry_after_seconds": null,
-  "error": { "code": "NOT_FOUND", "message": "paper not found", "details": {} },
-  "data": null
-}
 ```
 
 </details>
@@ -993,18 +763,17 @@ Finds papers related to a seed paper ranked by semantic relevance to an intent. 
 <details>
 <summary><code>search_github</code> — Search GitHub issues, PRs, and repos</summary>
 
-Searches GitHub issue history, pull requests, discussions, and repository READMEs using natural language. Useful for researching how a bug was fixed or what library maintainers have said.
+Searches GitHub issue history, pull requests, discussions, and repository READMEs using natural language. Returns matched content with repository metadata, URLs, and markdown snippets. Useful for researching how a bug was fixed, what a library's maintainers have said, or finding prior art in open source projects.
 
 **Inputs:**
 ```
-- `query` (string, required) — Natural language query (e.g. "race condition in worker shutdown firecrawl")
-- `k` (int, optional) — Maximum results to return (1–100, default: 20)
+- `query` (string, required) — Natural language query (e.g. 'race condition in worker shutdown firecrawl').
+- `k` (int, optional, default: 20) — Maximum number of results to return (1–100).
 ```
 
 **Output:**
 
 ```json
-// Success
 {
   "success": true,
   "statusCode": 200,
@@ -1026,16 +795,6 @@ Searches GitHub issue history, pull requests, discussions, and repository README
     ]
   }
 }
-
-// Error
-{
-  "success": false,
-  "statusCode": 400,
-  "retriable": false,
-  "retry_after_seconds": null,
-  "error": { "code": "VALIDATION_ERROR", "message": "query cannot be empty", "details": {} },
-  "data": null
-}
 ```
 
 > `resultType` values: `issue`, `pull_request`, `repository`, `discussion`
@@ -1044,6 +803,39 @@ Searches GitHub issue history, pull requests, discussions, and repository README
 
 
 ## API Parameters Reference
+
+<details>
+<summary><strong>Response Envelope</strong></summary>
+
+Every tool returns the same top-level envelope. Only `data` varies per tool.
+
+```json
+// Success
+{
+  "success": true,
+  "statusCode": 200,
+  "retriable": false,
+  "retry_after_seconds": null,
+  "error": null,
+  "data": { ... }
+}
+
+// Error
+{
+  "success": false,
+  "statusCode": 400,
+  "retriable": false,
+  "retry_after_seconds": null,
+  "error": { "code": "VALIDATION_ERROR", "message": "url cannot be empty", "details": {} },
+  "data": null
+}
+```
+
+- `retriable` — `true` when it is safe to retry (rate limit, network error, 503). `false` for validation and auth errors.
+- `retry_after_seconds` — seconds to wait before retrying; present only when `retriable` is `true` and the upstream specifies a delay.
+- `error.code` — machine-readable string: `VALIDATION_ERROR`, `AUTH_ERROR`, `UPSTREAM_ERROR`, `SERVER_ERROR`.
+
+</details>
 
 <details>
 <summary><strong>Output Formats</strong></summary>
@@ -1055,17 +847,18 @@ All scraping tools accept a `formats` list:
 - `rawHtml` — Raw page HTML
 - `screenshot` — Page screenshot as base64
 - `links` — All links found on the page
-- `images` — All image URLs
 - `summary` — AI-generated page summary
+- `json` — Structured JSON extraction
+- `audio`, `video`, `branding`, `product`, `menu` — Specialised extraction modes
 
 </details>
 
 <details>
 <summary><strong>Proxy Options</strong></summary>
 
-- `basic` — Standard proxy for general use
-- `enhanced` — Advanced proxy for bot-protected sites
 - `auto` — Automatically selects the best proxy (default)
+- `basic` — Standard proxy for general use
+- `enhanced` — Stealth proxy for bot-protected sites (higher credit cost)
 
 </details>
 
@@ -1077,6 +870,7 @@ All scraping tools accept a `formats` list:
 1. Call the tool → receive `data.id`
 2. Poll the matching status tool (`get_batch_scrape_status`, `get_crawl_status`, `get_agent_status`) with the job ID
 3. Keep polling until `status` is `completed`, `failed`, or `cancelled`
+4. If `data.next` is present in the status response, call again with the same job ID to page through results
 
 **Recommended polling interval:** every 15–30 seconds. Allow at least 2–3 minutes for crawl and agent jobs.
 
